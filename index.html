@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TXT小说阅读器</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 头部工具栏 -->
+        <header class="header">
+            <h1 class="logo">📖 小说阅读器</h1>
+            <div class="controls">
+                <input type="file" id="fileInput" accept=".txt" style="display: none;">
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    选择文件
+                </button>
+                <button class="btn btn-secondary" id="toggleSidebar">
+                    📋 目录
+                </button>
+                <button class="btn btn-secondary" id="toggleTheme">
+                    🌙 夜间
+                </button>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <!-- 左侧边栏 -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h3>章节目录</h3>
+                    <button class="close-btn" id="closeSidebar">&times;</button>
+                </div>
+                <div class="chapter-list" id="chapterList">
+                    <div class="empty-state">
+                        <p>请先选择一个txt文件</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 阅读区域 -->
+            <main class="reader" id="reader">
+                <div class="reader-content">
+                    <div class="welcome-screen">
+                        <div class="welcome-icon">📚</div>
+                        <h2>欢迎使用TXT小说阅读器</h2>
+                        <p>点击"选择文件"开始阅读</p>
+                        <ul class="feature-list">
+                            <li>✨ 智能章节识别</li>
+                            <li>📱 响应式设计</li>
+                            <li>🌙 夜间模式</li>
+                            <li>💾 阅读进度保存</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="reading-area" id="readingArea" style="display: none;">
+                        <div class="chapter-navigation">
+                            <button class="nav-btn" id="prevChapter" disabled>← 上一章</button>
+                            <div class="chapter-info">
+                                <h2 id="currentChapterTitle">章节标题</h2>
+                                <div class="progress-info">
+                                    <span id="chapterProgress">1 / 1</span>
+                                </div>
+                            </div>
+                            <button class="nav-btn" id="nextChapter">下一章 →</button>
+                        </div>
+                        
+                        <div class="text-content" id="textContent">
+                            <!-- 章节内容将在这里显示 -->
+                        </div>
+                        
+                        <div class="reading-controls">
+                            <div class="font-controls">
+                                <button class="control-btn" id="decreaseFont">A-</button>
+                                <span class="font-size-display" id="fontSizeDisplay">16px</span>
+                                <button class="control-btn" id="increaseFont">A+</button>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

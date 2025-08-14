@@ -1,0 +1,56 @@
+{
+  "name": "txt-novel-reader",
+  "version": "1.0.0",
+  "description": "现代化的TXT小说阅读器 - 支持智能章节解析、阅读进度保存、目录自动定位",
+  "main": "index.html",
+  "homepage": "https://github.com/your-username/txt-novel-reader",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/txt-novel-reader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/txt-novel-reader/issues"
+  },
+  "scripts": {
+    "start": "http-server . -p 8080 -o",
+    "serve": "http-server . -p 8080 -o",
+    "test": "jest --detectOpenHandles",
+    "test:watch": "jest --watch",
+    "build": "echo \"Static site - no build needed\"",
+    "lint": "eslint js/*.js",
+    "dev": "http-server . -p 3000 -o"
+  },
+  "keywords": [
+    "txt",
+    "novel",
+    "reader",
+    "ebook",
+    "web-app",
+    "javascript",
+    "html5",
+    "css3",
+    "responsive",
+    "reading",
+    "chapter-parser",
+    "progress-save",
+    "dark-theme"
+  ],
+  "author": {
+    "name": "Claude Code AI Assistant",
+    "email": "noreply@anthropic.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "puppeteer": "^21.0.0",
+    "jest": "^29.0.0",
+    "jest-puppeteer": "^9.0.0",
+    "http-server": "^14.0.0",
+    "eslint": "^8.0.0"
+  },
+  "jest": {
+    "preset": "jest-puppeteer",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  }
+}
