@@ -111,7 +111,9 @@ body {
 }
 
 .main-content {
-    display: flex;
+    display: grid;
+    grid-template-columns: 300px 300px 1fr;
+    grid-template-areas: "sidebar recommendations reader";
     flex: 1;
     min-height: 0;
     height: calc(100vh - 80px); /* 减去header高度，确保不超出视窗 */
@@ -119,6 +121,7 @@ body {
 }
 
 .sidebar {
+    grid-area: sidebar;
     width: 300px;
     background-color: var(--bg-secondary);
     border-right: 1px solid var(--border-color);
@@ -187,7 +190,7 @@ body {
 }
 
 .reader {
-    flex: 1;
+    grid-area: reader;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -366,6 +369,17 @@ body {
 }
 
 /* 响应式设计 */
+@media (max-width: 1199px) {
+    .main-content {
+        grid-template-columns: 300px 1fr !important;
+        grid-template-areas: "sidebar reader" !important;
+    }
+    
+    .recommendations-panel {
+        display: none !important;
+    }
+}
+
 @media (max-width: 768px) {
     .header {
         padding: 1rem;
@@ -379,6 +393,13 @@ body {
         justify-content: center;
     }
     
+    .main-content {
+        grid-template-columns: 1fr;
+        grid-template-areas: "reader";
+        height: calc(100vh - 120px); /* 移动端header高度可能更大 */
+        max-height: calc(100vh - 120px);
+    }
+    
     .sidebar {
         position: fixed;
         top: 0;
@@ -387,10 +408,15 @@ body {
         z-index: 200;
         box-shadow: var(--shadow);
         overflow-y: auto; /* 确保移动端侧边栏也可以滚动 */
+        grid-area: none;
     }
     
     .sidebar.open {
         left: 0;
+    }
+    
+    .recommendations-panel {
+        display: none;
     }
     
     .close-btn {
@@ -420,11 +446,6 @@ body {
     .progress-bar {
         margin-left: 0;
         width: 100%;
-    }
-    
-    .main-content {
-        height: calc(100vh - 120px); /* 移动端header高度可能更大 */
-        max-height: calc(100vh - 120px);
     }
     
     .text-content {
@@ -498,10 +519,217 @@ body {
     transition: font-size 0.2s ease;
 }
 
+/* 推荐面板样式 */
+.recommendations-panel {
+    grid-area: recommendations;
+    width: 300px;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 0;
+}
+
+/* CSDN栏目样式 - 完全复制原设计 */
+.aside-box {
+    background-color: rgb(255, 255, 255);
+    margin: 0 0 8px;
+    border-radius: 2px;
+    width: 300px;
+    font-family: -apple-system, "SF UI Text", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.75);
+    line-height: 22.75px;
+}
+
+[data-theme="dark"] .aside-box {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.aside-title {
+    background-color: rgb(9, 9, 59);
+    color: rgb(255, 255, 255);
+    font-family: "PingFang SC", "Microsoft YaHei", SimHei, Arial, SimSun;
+    font-size: 14px;
+    margin: 0;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 0;
+    display: block;
+    width: 300px;
+    height: 38px;
+    line-height: 38px;
+    box-sizing: border-box;
+}
+
+.aside-content {
+    padding: 16px;
+}
+
+/* TA的精选样式 */
+.his-selection-box {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.his-selection-item {
+    margin: 0;
+    padding: 0 0 16px 0;
+    font-size: 14px;
+    line-height: 22.75px;
+}
+
+.his-selection-item .title {
+    display: block;
+    color: rgb(153, 154, 170);
+    font-size: 14px;
+    line-height: 22px;
+    margin: 0 0 2px 0;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+[data-theme="dark"] .his-selection-item .title {
+    color: var(--text-secondary);
+}
+
+.his-selection-item .title:hover {
+    color: rgb(9, 9, 59);
+}
+
+[data-theme="dark"] .his-selection-item .title:hover {
+    color: var(--accent-color);
+}
+
+.his-selection-item .tag {
+    background-color: rgb(252, 85, 49);
+    color: rgb(255, 255, 255);
+    font-size: 11px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin-right: 6px;
+    display: inline;
+    line-height: 22px;
+}
+
+.his-selection-item .tag.active {
+    background-color: rgb(255, 238, 234);
+    color: rgb(252, 85, 49);
+}
+
+.his-selection-item .text {
+    font-size: 14px;
+    line-height: 22px;
+}
+
+.his-selection-item .read-count {
+    color: rgb(153, 154, 170);
+    font-size: 12px;
+    font-weight: 400;
+    margin: 0 8px 0 0;
+    padding: 0;
+}
+
+[data-theme="dark"] .his-selection-item .read-count {
+    color: var(--text-muted);
+}
+
+.his-selection-move {
+    margin: 16px 0 0 0;
+    padding: 0;
+}
+
+.his-selection-move .more {
+    color: rgb(153, 154, 170);
+    font-size: 12px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+[data-theme="dark"] .his-selection-move .more {
+    color: var(--text-muted);
+}
+
+.his-selection-move .more:hover {
+    color: rgb(9, 9, 59);
+}
+
+[data-theme="dark"] .his-selection-move .more:hover {
+    color: var(--accent-color);
+}
+
+.his-selection-move .more img {
+    width: 12px;
+    height: 12px;
+}
+
+/* 大家在看样式 */
+.hotArticle-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.hotArticle-list li {
+    margin: 8px 0 0 0;
+    padding: 0;
+    font-size: 14px;
+    line-height: 22.75px;
+}
+
+.hotArticle-list li:first-child {
+    margin: 0;
+}
+
+.hotArticle-list li a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: rgb(85, 86, 102);
+    font-size: 14px;
+    line-height: 22.75px;
+    text-decoration: none;
+    padding: 4px 0;
+}
+
+[data-theme="dark"] .hotArticle-list li a {
+    color: var(--text-secondary);
+}
+
+.hotArticle-list li a:hover {
+    color: rgb(9, 9, 59);
+}
+
+[data-theme="dark"] .hotArticle-list li a:hover {
+    color: var(--accent-color);
+}
+
+.hotArticle-list .read {
+    color: rgb(153, 154, 170);
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+[data-theme="dark"] .hotArticle-list .read {
+    color: var(--text-muted);
+}
+
+.hotArticle-list img {
+    width: 12px;
+    height: 12px;
+    margin-left: 4px;
+}
+
 /* 打印样式 */
 @media print {
     .header,
     .sidebar,
+    .recommendations-panel,
     .chapter-navigation,
     .reading-controls {
         display: none;
