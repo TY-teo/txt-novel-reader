@@ -35,12 +35,29 @@
     --shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
+/* ======================================*/
+
+/* 清除浮动样式 */
+.clearfix::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* 专栏折叠显示控制 */
+.column-item-hidden {
+    display: none !important;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     line-height: 1.6;
     color: var(--text-primary);
     background-color: var(--bg-primary);
     transition: var(--transition);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* 防止水平滚动 */
 }
 
 .app-container {
@@ -116,7 +133,7 @@ body {
     grid-template-areas: "sidebar recommendations reader rightsidebar";
     flex: 1;
     min-height: 0;
-    height: calc(100vh - 80px); /* 减去header高度，确保不超出视窗 */
+    height: calc(100vh - 80px); /* 恢复高度限制，确保左侧sidebar滚动正常 */
     max-height: calc(100vh - 80px);
 }
 
@@ -129,6 +146,7 @@ body {
     flex-direction: column;
     transition: var(--transition);
     overflow: hidden;
+    overflow-x: hidden; /* 防止水平滚动 */
 }
 
 .sidebar-header {
@@ -163,6 +181,7 @@ body {
 .chapter-list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden; /* 防止水平滚动 */
     padding: 0.5rem 0;
 }
 
@@ -172,6 +191,11 @@ body {
     border-bottom: 1px solid var(--border-color);
     transition: var(--transition);
     font-size: 0.9rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .chapter-item:hover {
@@ -306,12 +330,8 @@ body {
     white-space: pre-wrap;
     word-wrap: break-word;
     margin-bottom: 2rem;
-    padding: 1rem;
-    background-color: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--border-color);
     overflow-y: auto; /* 添加垂直滚动 */
-    max-height: calc(100vh - 250px); /* 限制最大高度，为导航和控制栏留出空间 */
+    max-height: calc(100vh - 120px); /* 调整高度限制，因为去掉了导航栏 */
 }
 
 .reading-controls {
@@ -422,7 +442,7 @@ body {
         height: 100vh;
         z-index: 200;
         box-shadow: var(--shadow);
-        overflow-y: auto; /* 确保移动端侧边栏也可以滚动 */
+        overflow-y: auto; /* 移动端保留滚动，因为高度有限 */
         grid-area: none;
     }
     
@@ -468,7 +488,7 @@ body {
     }
     
     .text-content {
-        max-height: calc(100vh - 280px); /* 移动端调整高度限制 */
+        max-height: calc(100vh - 180px); /* 移动端调整高度限制，去掉了导航栏 */
     }
 }
 
@@ -492,8 +512,7 @@ body {
     
     .text-content {
         font-size: 14px;
-        padding: 0.75rem;
-        max-height: calc(100vh - 300px); /* 移动端调整高度限制 */
+        max-height: calc(100vh - 200px); /* 移动端调整高度限制，去掉了导航栏 */
     }
     
     .welcome-screen {
@@ -547,24 +566,33 @@ body {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    overflow-x: hidden; /* 防止水平滚动 */
     padding: 0;
 }
 
 /* CSDN栏目样式 - 完全复制原设计 */
 .aside-box {
     background-color: rgb(255, 255, 255);
-    margin: 0 0 8px;
-    border-radius: 2px;
-    width: 300px;
+    margin: 0;
+    border-radius: 6px;
+    max-width: 100%;
+    width: 100%;
     font-family: -apple-system, "SF UI Text", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
     font-size: 14px;
     color: rgba(0, 0, 0, 0.75);
-    line-height: 22.75px;
+    line-height: 1.6;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 [data-theme="dark"] .aside-box {
     background-color: var(--bg-tertiary);
     color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .aside-title {
@@ -573,18 +601,37 @@ body {
     font-family: "PingFang SC", "Microsoft YaHei", SimHei, Arial, SimSun;
     font-size: 14px;
     margin: 0;
-    padding: 0 16px;
+    padding: 12px 16px;
     border: 0;
-    border-radius: 0;
+    border-radius: 6px 6px 0 0;
     display: block;
-    width: 300px;
-    height: 38px;
-    line-height: 38px;
+    width: 100%;
+    line-height: 1.4;
     box-sizing: border-box;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .aside-content {
     padding: 16px;
+}
+
+.aside-content a {
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    padding: 4px 0;
+    display: block;
+}
+
+.aside-content a:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: rgb(59, 130, 246);
+    transform: translateX(2px);
+}
+
+[data-theme="dark"] .aside-content a:hover {
+    background-color: rgba(99, 179, 237, 0.2);
+    color: rgb(99, 179, 237);
 }
 
 /* TA的精选样式 */
@@ -751,8 +798,12 @@ body {
     background-color: var(--bg-secondary);
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    padding: 0;
+    overflow: visible; /* 让所有内容完全显示 */
+    padding: 8px;
+    gap: 8px;
+    height: auto; /* 自动高度 */
+    min-height: 0; /* 移除最小高度限制 */
+    align-self: start; /* 从顶部开始排列，不受grid容器高度限制 */
 }
 
 /* 目录栏目样式 */
@@ -762,6 +813,8 @@ body {
     border-radius: 2px;
     width: 300px;
     box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 4px 0px;
+    height: auto; /* 自动高度 */
+    overflow: visible; /* 让内容完全显示 */
 }
 
 [data-theme="dark"] .groupfile {
@@ -773,8 +826,7 @@ body {
 }
 
 .group_item {
-    max-height: 117px;
-    overflow: hidden;
+    /* 移除高度限制，让内容完整显示 */
 }
 
 .pos-box {
@@ -782,7 +834,7 @@ body {
 }
 
 .scroll-box {
-    overflow: hidden;
+    /* 移除overflow: hidden，让内容完整显示 */
 }
 
 .toc-box {
@@ -937,6 +989,8 @@ body {
     border-radius: 2px;
     width: 300px;
     box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 4px 0px;
+    height: auto; /* 自动高度 */
+    overflow: visible; /* 让内容完全显示 */
 }
 
 [data-theme="dark"] .kind_person {
@@ -948,8 +1002,7 @@ body {
 }
 
 #aside-content-column {
-    max-height: 208px;
-    overflow: hidden;
+    /* 移除高度限制，让内容完整显示 */
 }
 
 #aside-content-column ul {
@@ -962,18 +1015,22 @@ body {
     margin: 0 0 12px 0;
     padding: 0;
     display: flex;
-    align-items: center;
+    align-items: center; /* 确保整行居中对齐 */
     justify-content: space-between;
+    min-height: 44px; /* 给足够高度确保对齐 */
 }
 
 .special-column-name {
     display: flex;
-    align-items: center;
+    flex-direction: row; /* 确保水平排列 */
+    align-items: center; /* 图标、文字垂直居中 */
     color: rgb(85, 86, 102);
     text-decoration: none;
     font-size: 14px;
-    line-height: 24px;
+    line-height: 1.4; /* 调整行高避免偏移 */
     flex: 1;
+    gap: 12px; /* 图标和文字之间的间距 */
+    height: 44px; /* 固定高度确保对齐 */
 }
 
 [data-theme="dark"] .special-column-name {
@@ -989,11 +1046,7 @@ body {
 }
 
 .special-column-bar {
-    width: 3px;
-    height: 20px;
-    background-color: rgb(9, 9, 59);
-    margin-right: 8px;
-    border-radius: 2px;
+    display: none; /* 隐藏竖线 */
 }
 
 .special-column-bar-second {
@@ -1003,22 +1056,40 @@ body {
 .special-column-name img {
     width: 32px;
     height: 32px;
-    margin-right: 8px;
     border-radius: 4px;
+    flex-shrink: 0; /* 防止图片被压缩 */
+    object-fit: cover; /* 确保图片显示正确 */
+    display: block;
+     /* 图标自身居中 */
 }
+
+.right-sidebar .special-column-name {
+    display: flex !important; /* 强制使用flex布局 */
+    flex-direction: row !important; /* 强制水平排列 */
+    align-items: center !important; /* 强制垂直居中 */
+    overflow: visible !important; /* 覆盖右侧边栏的hidden设置 */
+    white-space: normal !important; /* 确保文字正常换行 */
+    gap: 12px !important; /* 强制设置间距 */
+}
+
 
 .special-column-name span {
     flex: 1;
+    line-height: 1.4;
+    color: inherit;
+    margin: 0;
+    padding: 0;
+}
+
+[data-theme="dark"] .special-column-name span {
+    color: var(--text-secondary);
 }
 
 .special-column-num {
     color: rgb(153, 154, 170);
     font-size: 12px;
-    margin-left: 8px;
-}
-
-[data-theme="dark"] .special-column-num {
-    color: var(--text-muted);
+    flex-shrink: 0;
+    line-height: 1.4;
 }
 
 .text-center {
@@ -1069,6 +1140,8 @@ body {
     border-radius: 2px;
     width: 300px;
     box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 4px 0px;
+    height: auto; /* 自动高度 */
+    overflow: visible; /* 让内容完全显示 */
 }
 
 [data-theme="dark"] .related-columns {
@@ -1089,18 +1162,28 @@ body {
     margin: 0 0 12px 0;
     padding: 0;
     display: flex;
-    align-items: center;
+    align-items: center; /* 确保整行居中对齐 */
     justify-content: space-between;
+    min-height: 40px; /* 给足够高度确保对齐 */
 }
 
 .related-column-name {
     display: flex;
-    align-items: center;
+    flex-direction: row; /* 确保水平排列 */
+    align-items: center; /* 图标、文字垂直居中 */
     color: rgb(85, 86, 102);
     text-decoration: none;
     font-size: 14px;
-    line-height: 24px;
+    line-height: 1.4; /* 调整行高避免偏移 */
     flex: 1;
+    gap: 12px; /* 图标和文字之间的间距 */
+    height: 44px; /* 统一高度确保对齐 */
+    overflow: visible !important; /* 覆盖右侧边栏的hidden设置 */
+}
+
+.right-sidebar .related-column-name {
+    overflow: visible !important; /* 覆盖右侧边栏的hidden设置 */
+    white-space: normal !important; /* 确保文字正常换行 */
 }
 
 [data-theme="dark"] .related-column-name {
@@ -1116,11 +1199,7 @@ body {
 }
 
 .related-column-bar {
-    width: 3px;
-    height: 20px;
-    background-color: rgb(9, 9, 59);
-    margin-right: 8px;
-    border-radius: 2px;
+    display: none; /* 隐藏竖线 */
 }
 
 .related-column-bar-orange {
@@ -1130,22 +1209,308 @@ body {
 .related-column-name img {
     width: 32px;
     height: 32px;
-    margin-right: 8px;
     border-radius: 4px;
+    flex-shrink: 0; /* 防止图片被压缩 */
+    object-fit: cover; /* 确保图片显示正确 */
+    display: block;
+    align-self: center; /* 图标自身居中 */
 }
 
 .related-column-name span {
     flex: 1;
+    line-height: 1.4;
+    display: flex;
+    align-items: center; /* 文字内容垂直居中 */
+    height: 32px; /* 与图标同高 */
 }
 
 .related-column-num {
     color: rgb(153, 154, 170);
     font-size: 12px;
     margin-left: 8px;
+    display: flex;
+    align-items: center; /* 篇数也要居中 */
+    height: 32px; /* 与图标同高 */
 }
 
 [data-theme="dark"] .related-column-num {
     color: var(--text-muted);
+}
+
+/* 设置弹窗样式 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.close-modal:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.setting-group {
+    margin-bottom: 1.5rem;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.range-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.range-input {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-tertiary);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.range-input::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.range-input::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.range-input::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-tertiary);
+    border: none;
+}
+
+.range-container span {
+    min-width: 50px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.color-options {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.color-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+
+.color-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.color-btn.active {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+.color-btn.active::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--accent-color);
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.setting-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* 可调节边距样式 */
+.adjustable-margins {
+    transition: padding 0.3s ease;
+}
+
+/* 侧栏文本控制 - 防止水平溢出（优雅版本） */
+.sidebar *, .right-sidebar * {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.sidebar a, .right-sidebar a {
+    white-space: normal !important;
+    overflow: hidden !important;
+    word-wrap: break-word !important;
+    line-height: 1.5 !important;
+}
+
+.sidebar ul, .right-sidebar ul,
+.sidebar ol, .right-sidebar ol,
+.sidebar li, .right-sidebar li {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+}
+
+
+/* 文件选择按钮修复 - 确保可点击性 */
+.header .btn {
+    position: relative;
+    z-index: 101;
+    pointer-events: auto;
+    user-select: none;
+}
+
+.header .controls {
+    position: relative;
+    z-index: 101;
+}
+
+/* 确保隐藏的文件输入框不影响布局 */
+#fileInput {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+}
+
+/* 按钮状态确保 */
+.btn:not(:disabled) {
+    pointer-events: auto;
+}
+
+.btn:active {
+    transform: translateY(0px);
+}
+
+/* 全屏布局优化 */
+html, body {
+    height: 100% !important;
+    overflow: hidden !important; /* 禁用页面滚动 */
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.app-container {
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100vh !important;
+}
+
+.main-content {
+    height: calc(100vh - 80px) !important;
+    max-height: calc(100vh - 80px) !important;
+}
+
+/* 右边栏全屏优化 */
+.right-sidebar {
+    height: 100% !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    gap: 0 !important;
+}
+
+/* 禁用右边栏滚动，但保持点击功能 */
+.right-sidebar, .right-sidebar * {
+    overflow: hidden !important;
+}
+
+/* 确保右边栏内容适应高度 */
+.right-sidebar > * {
+    flex-shrink: 0;
 }
 
 /* 打印样式 */
@@ -1155,7 +1520,8 @@ body {
     .recommendations-panel,
     .right-sidebar,
     .chapter-navigation,
-    .reading-controls {
+    .reading-controls,
+    .modal {
         display: none;
     }
     
@@ -1165,5 +1531,186 @@ body {
         padding: 0;
         font-size: 12pt;
         line-height: 1.6;
+    }
+}
+
+
+/* 文件选择按钮修复 - 确保可点击性 */
+.header .btn {
+    position: relative;
+    z-index: 101;
+    pointer-events: auto;
+    user-select: none;
+}
+
+.header .controls {
+    position: relative;
+    z-index: 101;
+}
+
+/* 确保隐藏的文件输入框不影响布局 */
+#fileInput {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+}
+
+/* 按钮状态确保 */
+.btn:not(:disabled) {
+    pointer-events: auto;
+}
+
+.btn:active {
+    transform: translateY(0px);
+}
+/* 全屏化样式调整 */
+
+/* 1. 设置html和body为100%高度，禁用页面滚动 */
+html, body {
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important; /* 禁用页面级别滚动 */
+}
+
+/* 2. 应用容器填满整个视口 */
+.app-container {
+    height: 100vh !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 3. 主内容区域调整为全屏布局 */
+.main-content {
+    display: grid !important;
+    grid-template-columns: 280px 280px 1fr 300px !important;
+    grid-template-areas: "sidebar recommendations reader rightsidebar" !important;
+    flex: 1 !important;
+    height: calc(100vh - 80px) !important; /* 减去header高度 */
+    max-height: calc(100vh - 80px) !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 4. 右边栏全屏高度设置，禁用滚动 */
+.right-sidebar {
+    grid-area: rightsidebar !important;
+    width: 300px !important;
+    background-color: var(--bg-secondary) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important; /* 完全禁用滚动 */
+    padding: 0 !important; /* 移除内边距，上下边缘顶到屏幕 */
+    gap: 0 !important;
+    height: 100% !important; /* 填满整个可用高度 */
+    min-height: 100% !important;
+    max-height: 100% !important;
+    align-self: stretch !important; /* 拉伸到容器全高 */
+    position: relative !important; /* 确保定位正确 */
+}
+
+/* 5. 禁用右边栏鼠标滚动事件 */
+.right-sidebar, .right-sidebar * {
+    overflow: hidden !important;
+    pointer-events: auto !important; /* 保持点击功能 */
+    -webkit-overflow-scrolling: none !important;
+}
+
+/* 6. 右边栏内容区域调整 */
+.right-sidebar .aside-box {
+    margin: 0 !important;
+    padding: 8px !important;
+    flex-shrink: 0 !important; /* 防止压缩 */
+    overflow: hidden !important;
+}
+
+/* 7. 确保其他栏目也填满屏幕高度 */
+.sidebar, .recommendations-panel {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow-y: auto !important; /* 保持这两个栏目的滚动功能 */
+}
+
+/* 8. 阅读区域调整 */
+.reader {
+    grid-area: reader !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    height: 100% !important;
+    max-height: 100% !important;
+}
+
+/* 9. 移除相关专栏的所有CSS样式（清理残留样式） */
+.related-columns,
+.related-content,
+.related-list,
+.related-column-name,
+.related-column-bar,
+.related-column-bar-orange,
+.related-column-num {
+    display: none !important;
+}
+
+/* 10. 确保header固定高度 */
+.header {
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+    flex-shrink: 0 !important;
+}
+
+/* 11. 响应式设计更新 - 保持原有断点但调整布局 */
+@media (max-width: 1399px) {
+    .main-content {
+        grid-template-columns: 280px 280px 1fr !important;
+        grid-template-areas: "sidebar recommendations reader" !important;
+    }
+    
+    .right-sidebar {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1199px) {
+    .main-content {
+        grid-template-columns: 280px 1fr !important;
+        grid-template-areas: "sidebar reader" !important;
+    }
+    
+    .recommendations-panel,
+    .right-sidebar {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr !important;
+        grid-template-areas: "reader" !important;
+        height: calc(100vh - 120px) !important;
+        max-height: calc(100vh - 120px) !important;
+    }
+    
+    .sidebar,
+    .recommendations-panel,
+    .right-sidebar {
+        display: none !important;
+    }
+    
+    .sidebar.open {
+        display: flex !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100vh !important;
+        z-index: 200 !important;
     }
 }

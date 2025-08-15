@@ -62,18 +62,72 @@ class NovelReader {
         this.nextChapterBtn = document.getElementById('nextChapter');
         this.decreaseFontBtn = document.getElementById('decreaseFont');
         this.increaseFontBtn = document.getElementById('increaseFont');
+        
+        // 设置相关元素
+        this.openSettingsBtn = document.getElementById('openSettings');
+        this.settingsModal = document.getElementById('settingsModal');
+        this.closeSettingsBtn = document.getElementById('closeSettings');
+        this.closeSettingsBtnSecondary = document.getElementById('closeSettingsBtn');
+        this.leftMarginRange = document.getElementById('leftMargin');
+        this.rightMarginRange = document.getElementById('rightMargin');
+        this.leftMarginValue = document.getElementById('leftMarginValue');
+        this.rightMarginValue = document.getElementById('rightMarginValue');
+        this.resetSettingsBtn = document.getElementById('resetSettings');
+        this.colorBtns = document.querySelectorAll('.color-btn');
+        this.readerContent = document.querySelector('.reader-content');
+        this.readingArea = document.querySelector('.reading-area');
     }
 
     bindEvents() {
         this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        
+        // 文件选择按钮事件监听器
+        const fileSelectBtn = document.querySelector('.btn-primary');
+        if (fileSelectBtn && fileSelectBtn.textContent.trim() === '选择文件') {
+            console.log("发现文件选择按钮，添加事件监听器");
+            fileSelectBtn.addEventListener("click", (e) => {
+                console.log("文件选择按钮被点击");
+                if (this.fileInput) {
+                    this.fileInput.click();
+                } else {
+                    console.error("文件输入框不存在");
+                }
+            });
+        }
         this.toggleSidebarBtn.addEventListener('click', () => this.toggleSidebar());
         this.closeSidebarBtn.addEventListener('click', () => this.closeSidebar());
         this.toggleThemeBtn.addEventListener('click', () => this.toggleTheme());
-        this.prevChapterBtn.addEventListener('click', () => this.previousChapter());
-        this.nextChapterBtn.addEventListener('click', () => this.nextChapter());
+        if (this.prevChapterBtn) this.prevChapterBtn.addEventListener('click', () => this.previousChapter());
+        if (this.nextChapterBtn) this.nextChapterBtn.addEventListener('click', () => this.nextChapter());
         this.decreaseFontBtn.addEventListener('click', () => this.changeFontSize(-2));
         this.increaseFontBtn.addEventListener('click', () => this.changeFontSize(2));
         document.addEventListener('keydown', (e) => this.handleKeydown(e));
+        
+        // 设置相关事件
+        this.openSettingsBtn.addEventListener('click', () => this.openSettingsModal());
+        this.closeSettingsBtn.addEventListener('click', () => this.closeSettingsModal());
+        this.closeSettingsBtnSecondary.addEventListener('click', () => this.closeSettingsModal());
+        this.leftMarginRange.addEventListener('input', (e) => this.updateMargins());
+        this.rightMarginRange.addEventListener('input', (e) => this.updateMargins());
+        this.resetSettingsBtn.addEventListener('click', () => this.resetSettings());
+        
+        // 背景色选择事件
+        this.colorBtns.forEach(btn => {
+            btn.addEventListener('click', () => this.selectBackgroundColor(btn.dataset.color));
+        });
+        
+        // 点击模态框背景关闭
+        this.settingsModal.addEventListener('click', (e) => {
+            if (e.target === this.settingsModal) {
+                this.closeSettingsModal();
+            }
+        });
+        
+        // 分类专栏展开/收起功能
+        this.initColumnExpandCollapse();
+        
+        // 处理图片加载错误
+        this.handleImageErrors();
     }
 
     async handleFileSelect(event) {
@@ -245,15 +299,15 @@ class NovelReader {
         this.currentChapterIndex = index;
         const chapter = this.chapters[index];
         
-        this.currentChapterTitle.textContent = chapter.title;
+        if (this.currentChapterTitle) this.currentChapterTitle.textContent = chapter.title;
         this.textContent.textContent = chapter.content;
-        this.chapterProgress.textContent = `${index + 1} / ${this.chapters.length}`;
+        if (this.chapterProgress) this.chapterProgress.textContent = `${index + 1} / ${this.chapters.length}`;
         
         const progressPercentage = ((index + 1) / this.chapters.length) * 100;
         this.progressFill.style.width = `${progressPercentage}%`;
         
-        this.prevChapterBtn.disabled = index === 0;
-        this.nextChapterBtn.disabled = index === this.chapters.length - 1;
+        if (this.prevChapterBtn) this.prevChapterBtn.disabled = index === 0;
+        if (this.nextChapterBtn) this.nextChapterBtn.disabled = index === this.chapters.length - 1;
         
         document.querySelectorAll('.chapter-item').forEach((item, i) => {
             item.classList.toggle('active', i === index);
@@ -508,6 +562,9 @@ class NovelReader {
         } catch (error) {
             console.error('读取设置失败:', error);
         }
+        
+        // 加载阅读设置
+        this.loadReadingSettings();
     }
 
     loadLastBook() {
@@ -521,6 +578,226 @@ class NovelReader {
         } catch (error) {
             console.error('读取上次打开的书籍失败:', error);
         }
+    }
+
+    // 设置功能方法
+    openSettingsModal() {
+        this.settingsModal.classList.add('show');
+        this.loadSettingsToModal();
+    }
+
+    closeSettingsModal() {
+        this.settingsModal.classList.remove('show');
+    }
+
+    loadSettingsToModal() {
+        // 从localStorage加载设置
+        const settings = this.getReadingSettings();
+        
+        // 更新滑块值
+        this.leftMarginRange.value = settings.leftMargin;
+        this.rightMarginRange.value = settings.rightMargin;
+        this.leftMarginValue.textContent = settings.leftMargin + 'px';
+        this.rightMarginValue.textContent = settings.rightMargin + 'px';
+        
+        // 更新背景色选择
+        this.colorBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.color === settings.backgroundColor);
+        });
+    }
+
+    updateMargins() {
+        const leftMargin = this.leftMarginRange.value;
+        const rightMargin = this.rightMarginRange.value;
+        
+        // 更新显示值
+        this.leftMarginValue.textContent = leftMargin + 'px';
+        this.rightMarginValue.textContent = rightMargin + 'px';
+        
+        // 应用边距
+        this.applyMargins(leftMargin, rightMargin);
+        
+        // 保存设置
+        this.saveReadingSettings();
+    }
+
+    applyMargins(leftMargin, rightMargin) {
+        if (this.readerContent) {
+            // 关键修复：移除max-width和margin限制，让内容占满整个容器
+            this.readerContent.style.setProperty('max-width', 'none', 'important');
+            this.readerContent.style.setProperty('margin', '0', 'important');
+            this.readerContent.style.setProperty('width', '100%', 'important');
+            
+            // 然后应用自定义边距
+            this.readerContent.style.setProperty('padding-left', leftMargin + 'px', 'important');
+            this.readerContent.style.setProperty('padding-right', rightMargin + 'px', 'important');
+            this.readerContent.style.setProperty('padding-top', '0', 'important');
+            this.readerContent.style.setProperty('padding-bottom', '0', 'important');
+        }
+        if (this.readingArea) {
+            // 重置reading-area的padding为上下2rem，左右0
+            this.readingArea.style.setProperty('padding', '2rem 0', 'important');
+        }
+        
+        // 确保text-content没有额外的margin
+        if (this.textContent) {
+            this.textContent.style.setProperty('margin', '0', 'important');
+            this.textContent.style.setProperty('margin-bottom', '2rem', 'important'); // 保持底部间距
+        }
+    }
+
+    selectBackgroundColor(color) {
+        // 更新选中状态
+        this.colorBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.color === color);
+        });
+        
+        // 应用背景色
+        this.applyBackgroundColor(color);
+        
+        // 保存设置
+        this.saveReadingSettings();
+    }
+
+    applyBackgroundColor(color) {
+        if (this.textContent) {
+            this.textContent.style.backgroundColor = color === 'transparent' ? 'transparent' : color;
+            this.textContent.style.padding = color === 'transparent' ? '0' : '1rem';
+            this.textContent.style.borderRadius = color === 'transparent' ? '0' : 'var(--border-radius)';
+        }
+    }
+
+    resetSettings() {
+        const defaultSettings = {
+            leftMargin: 32,
+            rightMargin: 32,
+            backgroundColor: 'transparent'
+        };
+        
+        // 更新UI
+        this.leftMarginRange.value = defaultSettings.leftMargin;
+        this.rightMarginRange.value = defaultSettings.rightMargin;
+        this.leftMarginValue.textContent = defaultSettings.leftMargin + 'px';
+        this.rightMarginValue.textContent = defaultSettings.rightMargin + 'px';
+        
+        // 应用设置
+        this.applyMargins(defaultSettings.leftMargin, defaultSettings.rightMargin);
+        this.selectBackgroundColor(defaultSettings.backgroundColor);
+        
+        // 保存设置
+        localStorage.setItem('readingSettings', JSON.stringify(defaultSettings));
+    }
+
+    getReadingSettings() {
+        const defaultSettings = {
+            leftMargin: 32,
+            rightMargin: 32,
+            backgroundColor: 'transparent'
+        };
+        
+        try {
+            const saved = localStorage.getItem('readingSettings');
+            return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+        } catch (error) {
+            console.error('读取阅读设置失败:', error);
+            return defaultSettings;
+        }
+    }
+
+    saveReadingSettings() {
+        const settings = {
+            leftMargin: parseInt(this.leftMarginRange.value),
+            rightMargin: parseInt(this.rightMarginRange.value),
+            backgroundColor: document.querySelector('.color-btn.active')?.dataset.color || 'transparent'
+        };
+        
+        try {
+            localStorage.setItem('readingSettings', JSON.stringify(settings));
+        } catch (error) {
+            console.error('保存阅读设置失败:', error);
+        }
+    }
+
+    loadReadingSettings() {
+        const settings = this.getReadingSettings();
+        this.applyMargins(settings.leftMargin, settings.rightMargin);
+        this.applyBackgroundColor(settings.backgroundColor);
+    }
+
+    // 分类专栏展开/收起功能
+    initColumnExpandCollapse() {
+        const columnContainer = document.getElementById('aside-content-column');
+        const expandBtn = document.querySelector('.kind_person .flexible-btn-new');
+        const collapseBtn = document.querySelector('.kind_person .flexible-btn-new-close');
+        
+        if (!columnContainer || !expandBtn || !collapseBtn) return;
+        
+        const columnItems = columnContainer.querySelectorAll('li');
+        const maxVisibleItems = 4; // 默认显示4个专栏
+        
+        // 初始化：只显示前4个专栏
+        this.showLimitedColumns(columnItems, maxVisibleItems);
+        
+        // 展开按钮事件
+        expandBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.expandAllColumns(columnItems, expandBtn, collapseBtn);
+        });
+        
+        // 收起按钮事件
+        collapseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.collapseColumns(columnItems, maxVisibleItems, expandBtn, collapseBtn);
+        });
+    }
+    
+    showLimitedColumns(items, maxVisible) {
+        items.forEach((item, index) => {
+            if (index >= maxVisible) {
+                item.classList.add('column-item-hidden');
+            } else {
+                item.classList.remove('column-item-hidden');
+            }
+        });
+    }
+    
+    expandAllColumns(items, expandBtn, collapseBtn) {
+        items.forEach(item => {
+            item.classList.remove('column-item-hidden');
+        });
+        expandBtn.style.display = 'none';
+        collapseBtn.style.display = 'inline-flex';
+    }
+    
+    collapseColumns(items, maxVisible, expandBtn, collapseBtn) {
+        this.showLimitedColumns(items, maxVisible);
+        expandBtn.style.display = 'inline-flex';
+        collapseBtn.style.display = 'none';
+    }
+
+    // 处理图片加载错误
+    handleImageErrors() {
+        const columnImages = document.querySelectorAll('.special-column-name img, .related-column-name img');
+        columnImages.forEach(img => {
+            img.addEventListener('error', function() {
+                // 替换为默认图标，使用Unicode符号
+                this.style.display = 'none';
+                const fallbackIcon = document.createElement('div');
+                fallbackIcon.innerHTML = '📂';
+                fallbackIcon.style.cssText = `
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background-color: var(--bg-secondary);
+                    border-radius: 4px;
+                    font-size: 18px;
+                    flex-shrink: 0;
+                `;
+                this.parentNode.insertBefore(fallbackIcon, this);
+            });
+        });
     }
 }
 

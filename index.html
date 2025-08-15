@@ -13,7 +13,7 @@
             <h1 class="logo">📖 小说阅读器</h1>
             <div class="controls">
                 <input type="file" id="fileInput" accept=".txt" style="display: none;">
-                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                <button class="btn btn-primary">
                     选择文件
                 </button>
                 <button class="btn btn-secondary" id="toggleSidebar">
@@ -21,6 +21,9 @@
                 </button>
                 <button class="btn btn-secondary" id="toggleTheme">
                     🌙 夜间
+                </button>
+                <button class="btn btn-secondary" id="openSettings">
+                    ⚙️ 设置
                 </button>
             </div>
         </header>
@@ -154,17 +157,6 @@
                     </div>
                     
                     <div class="reading-area" id="readingArea" style="display: none;">
-                        <div class="chapter-navigation">
-                            <button class="nav-btn" id="prevChapter" disabled>← 上一章</button>
-                            <div class="chapter-info">
-                                <h2 id="currentChapterTitle">章节标题</h2>
-                                <div class="progress-info">
-                                    <span id="chapterProgress">1 / 1</span>
-                                </div>
-                            </div>
-                            <button class="nav-btn" id="nextChapter">下一章 →</button>
-                        </div>
-                        
                         <div class="text-content" id="textContent">
                             <!-- 章节内容将在这里显示 -->
                         </div>
@@ -331,55 +323,51 @@
                     </div>
                 </div>
 
-                <!-- 相关专栏栏目 -->
-                <div class="aside-box related-columns d-flex flex-column">
-                    <h3 class="aside-title">相关专栏</h3>
-                    <div class="aside-content related-content">
-                        <ul class="related-list">
-                            <li>
-                                <a class="clearfix related-column-name" href="#">
-                                    <div class="related-column-bar"></div>
-                                    <img src="https://i-blog.csdnimg.cn/direct/8b63ff7d17c142a0a531bfcc8eef549c.png?x-oss-process=image/resize,m_fixed,h_64,w_64" alt="">
-                                    <span>Unity开发实战</span>
-                                </a>
-                                <span class="related-column-num">32篇</span>
-                            </li>
-                            <li>
-                                <a class="clearfix related-column-name" href="#">
-                                    <div class="related-column-bar related-column-bar-orange"></div>
-                                    <img src="https://i-blog.csdnimg.cn/columns/default/20201014180756780.png?x-oss-process=image/resize,m_fixed,h_64,w_64" alt="">
-                                    <span>VR技术前沿</span>
-                                </a>
-                                <span class="related-column-num">18篇</span>
-                            </li>
-                            <li>
-                                <a class="clearfix related-column-name" href="#">
-                                    <div class="related-column-bar"></div>
-                                    <img src="https://i-blog.csdnimg.cn/columns/default/20201014180756724.png?x-oss-process=image/resize,m_fixed,h_64,w_64" alt="">
-                                    <span>3D渲染技术</span>
-                                </a>
-                                <span class="related-column-num">24篇</span>
-                            </li>
-                            <li>
-                                <a class="clearfix related-column-name" href="#">
-                                    <div class="related-column-bar related-column-bar-orange"></div>
-                                    <img src="https://i-blog.csdnimg.cn/blog_column_migrate/4e6a5160c63a16aed96933ce2b23bed2.png?x-oss-process=image/resize,m_fixed,h_64,w_64" alt="">
-                                    <span>移动端开发</span>
-                                </a>
-                                <span class="related-column-num">15篇</span>
-                            </li>
-                            <li>
-                                <a class="clearfix related-column-name" href="#">
-                                    <div class="related-column-bar"></div>
-                                    <img src="https://i-blog.csdnimg.cn/columns/default/20201014180756754.png?x-oss-process=image/resize,m_fixed,h_64,w_64" alt="">
-                                    <span>游戏引擎开发</span>
-                                </a>
-                                <span class="related-column-num">28篇</span>
-                            </li>
-                        </ul>
+            </aside>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>阅读设置</h3>
+                <button class="close-modal" id="closeSettings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label>左边距：</label>
+                    <div class="range-container">
+                        <input type="range" id="leftMargin" min="0" max="100" value="32" class="range-input">
+                        <span id="leftMarginValue">32px</span>
                     </div>
                 </div>
-            </aside>
+                
+                <div class="setting-group">
+                    <label>右边距：</label>
+                    <div class="range-container">
+                        <input type="range" id="rightMargin" min="0" max="100" value="32" class="range-input">
+                        <span id="rightMarginValue">32px</span>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label>正文背景色：</label>
+                    <div class="color-options">
+                        <button class="color-btn" data-color="transparent" style="background: transparent; border: 2px solid #ddd;">无</button>
+                        <button class="color-btn" data-color="#f8f9fa" style="background: #f8f9fa;"></button>
+                        <button class="color-btn" data-color="#ffffff" style="background: #ffffff; border: 1px solid #ddd;"></button>
+                        <button class="color-btn" data-color="#fff9e6" style="background: #fff9e6;"></button>
+                        <button class="color-btn" data-color="#f0f8f0" style="background: #f0f8f0;"></button>
+                        <button class="color-btn" data-color="#f0f4ff" style="background: #f0f4ff;"></button>
+                    </div>
+                </div>
+                
+                <div class="setting-actions">
+                    <button class="btn btn-primary" id="resetSettings">恢复默认</button>
+                    <button class="btn btn-secondary" id="closeSettingsBtn">关闭</button>
+                </div>
+            </div>
         </div>
     </div>
 
