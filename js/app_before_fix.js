@@ -11,7 +11,6 @@ class NovelReader {
         this.scrollSaveTimer = null;
         this.scrollHandler = null;
         
-        
         this.initializeElements();
         this.bindEvents();
         this.loadSettings();
@@ -77,26 +76,10 @@ class NovelReader {
         this.colorBtns = document.querySelectorAll('.color-btn');
         this.readerContent = document.querySelector('.reader-content');
         this.readingArea = document.querySelector('.reading-area');
-        
-        
     }
 
     bindEvents() {
         this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
-        
-        // 文件选择按钮事件监听器
-        const fileSelectBtn = document.querySelector('.btn-primary');
-        if (fileSelectBtn && fileSelectBtn.textContent.trim() === '选择文件') {
-            console.log("发现文件选择按钮，添加事件监听器");
-            fileSelectBtn.addEventListener("click", (e) => {
-                console.log("文件选择按钮被点击");
-                if (this.fileInput) {
-                    this.fileInput.click();
-                } else {
-                    console.error("文件输入框不存在");
-                }
-            });
-        }
         this.toggleSidebarBtn.addEventListener('click', () => this.toggleSidebar());
         this.closeSidebarBtn.addEventListener('click', () => this.closeSidebar());
         this.toggleThemeBtn.addEventListener('click', () => this.toggleTheme());
@@ -126,14 +109,11 @@ class NovelReader {
             }
         });
         
-        
         // 分类专栏展开/收起功能
         this.initColumnExpandCollapse();
         
         // 处理图片加载错误
         this.handleImageErrors();
-        
-        // 绑定底部导航事件
     }
 
     async handleFileSelect(event) {
@@ -306,14 +286,7 @@ class NovelReader {
         const chapter = this.chapters[index];
         
         if (this.currentChapterTitle) this.currentChapterTitle.textContent = chapter.title;
-        
-        // 只显示章节内容
-        this.textContent.innerHTML = `
-            <div class="chapter-text" id="chapterText">
-                ${chapter.content.replace(/\n/g, '<br>')}
-            </div>
-        `;
-        
+        this.textContent.textContent = chapter.content;
         if (this.chapterProgress) this.chapterProgress.textContent = `${index + 1} / ${this.chapters.length}`;
         
         const progressPercentage = ((index + 1) / this.chapters.length) * 100;
@@ -332,11 +305,9 @@ class NovelReader {
         this.saveReadingProgress();
         this.textContent.scrollTop = 0;
         
-        // 添加滚动事件监听，保存滚动位置
+        // 添加滚动事件监听，实时保存滚动位置
         this.addScrollProgressSaver();
-        
     }
-
 
     addScrollProgressSaver() {
         // 移除之前的滚动监听器（如果存在）
@@ -359,7 +330,7 @@ class NovelReader {
             this.textContent.removeEventListener('scroll', this.scrollHandler);
         }
         
-        // 添加滚动事件监听器
+        // 添加新的滚动事件监听器
         this.scrollHandler = debouncedSave;
         this.textContent.addEventListener('scroll', this.scrollHandler);
     }
@@ -814,13 +785,10 @@ class NovelReader {
             });
         });
     }
-
-
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     const reader = new NovelReader();
-    
     
     window.addEventListener('beforeunload', () => {
         if (reader.currentBook) {

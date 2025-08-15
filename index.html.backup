@@ -10,10 +10,7 @@
     <div class="app-container">
         <!-- 头部工具栏 -->
         <header class="header">
-            <h1 class="logo" style="font-size: 0; line-height: 0;">
-                <img src="images/图标.png" alt="图标1" style="width: 48px; height: 48px; display: inline-block; margin: 0; padding: 0; vertical-align: top;"><!--
-                --><img src="images/图标1.png" alt="图标2" style="width: 144px; height: 48px; display: inline-block; margin: 0; padding: 0; vertical-align: top;">
-            </h1>
+            <h1 class="logo">📖 小说阅读器</h1>
             <div class="controls">
                 <input type="file" id="fileInput" accept=".txt" style="display: none;">
                 <button class="btn btn-primary">
@@ -148,7 +145,7 @@
             <main class="reader" id="reader">
                 <div class="reader-content">
                     <div class="welcome-screen">
-                        <div class="welcome-icon"><img src="images/图标1.png" alt="小说阅读器" style="width: 64px; height: 64px;"></div>
+                        <div class="welcome-icon">📚</div>
                         <h2>欢迎使用TXT小说阅读器</h2>
                         <p>点击"选择文件"开始阅读</p>
                         <ul class="feature-list">
@@ -161,10 +158,32 @@
                     
                     <div class="reading-area" id="readingArea" style="display: none;">
                         <div class="text-content" id="textContent">
-                            <div class="chapter-text" id="chapterText">
-                                <!-- 章节内容将在这里显示 -->
+                            <!-- 章节内容将在这里显示 -->
+                        </div>
+                        
+                        <!-- 章节导航栏 - 滚动到底部时显示 -->
+                        <div class="chapter-navigation" id="chapterNavigation" style="display: none;">
+                            <button class="nav-btn prev-btn" id="prevChapterNav" title="上一章">
+                                <span class="nav-icon">←</span>
+                                <span class="nav-text">上一章</span>
+                            </button>
+                            
+                            <div class="chapter-progress-nav">
+                                <div class="progress-display">
+                                    <span id="currentChapterDisplay">1</span>
+                                    <span class="progress-separator">/</span>
+                                    <span id="totalChaptersDisplay">1</span>
+                                </div>
+                                <div class="chapter-jump">
+                                    <input type="number" id="chapterJumpInput" placeholder="章节" min="1" max="1">
+                                    <button class="jump-btn" id="chapterJumpBtn">跳转</button>
+                                </div>
                             </div>
                             
+                            <button class="nav-btn next-btn" id="nextChapterNav" title="下一章">
+                                <span class="nav-text">下一章</span>
+                                <span class="nav-icon">→</span>
+                            </button>
                         </div>
                         
                         <div class="reading-controls">

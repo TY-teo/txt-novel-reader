@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>底部导航测试 - TXT小说阅读器</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* 测试页面特定样式 */
+        .test-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+        }
+        
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+        }
+        
+        .test-chapter-content {
+            height: 200px;
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-y: auto;
+            margin: 1rem 0;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1 class="logo">📖 底部导航测试</h1>
+            <div class="controls">
+                <button class="btn btn-secondary" id="toggleTheme">🌙 夜间</button>
+            </div>
+        </header>
+
+        <div class="test-container">
+            <h2>底部章节导航功能测试</h2>
+            
+            <div class="test-section">
+                <h3>测试场景1：正常章节导航</h3>
+                <div class="text-content" style="height: 300px; border: 1px solid var(--border-color);">
+                    <div class="chapter-text">
+                        <h4>第一章 测试章节</h4>
+                        <p>这是测试内容。测试内容用于验证底部导航功能是否正常工作。</p>
+                        <p>当您阅读到章节底部时，应该能看到底部导航栏，包含上一章、下一章按钮以及当前章节信息。</p>
+                        <p>底部导航应该具有以下特性：</p>
+                        <ul>
+                            <li>✅ 固定在正文底部（sticky定位）</li>
+                            <li>✅ 按钮状态管理（首章/末章时禁用）</li>
+                            <li>✅ 响应式设计适配</li>
+                            <li>✅ 夜间模式支持</li>
+                            <li>✅ 平滑的hover动画效果</li>
+                            <li>✅ 章节标题和进度显示</li>
+                        </ul>
+                        <p>请滚动到底部查看导航效果。</p>
+                        <br><br><br><br><br><br><br><br>
+                        <p>继续滚动...</p>
+                        <br><br><br><br><br><br><br><br>
+                        <p>快到底部了...</p>
+                        <br><br><br><br><br><br><br><br>
+                    </div>
+
+                    <!-- 底部章节导航 -->
+                    <div class="bottom-navigation" id="testBottomNavigation">
+                        <div class="navigation-content">
+                            <button class="nav-btn" id="testPrevBtn" disabled title="已是第一章">
+                                <span class="btn-icon">‹</span>
+                                <span class="btn-text">上一章</span>
+                            </button>
+                            
+                            <div class="chapter-info">
+                                <h3 title="第一章 测试章节">第一章 测试章节</h3>
+                                <div class="chapter-progress" style="--progress-width: 33%;">1 / 3</div>
+                            </div>
+                            
+                            <button class="nav-btn" id="testNextBtn" title="下一章: 第二章 测试章节 (Ctrl + →)">
+                                <span class="btn-text">下一章</span>
+                                <span class="btn-icon">›</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>测试场景2：中间章节</h3>
+                <div class="text-content" style="height: 200px; border: 1px solid var(--border-color);">
+                    <div class="chapter-text">
+                        <h4>第二章 中间章节</h4>
+                        <p>这是中间章节的测试内容。</p>
+                        <p>在中间章节中，上一章和下一章按钮都应该是可用状态。</p>
+                    </div>
+
+                    <div class="bottom-navigation">
+                        <div class="navigation-content">
+                            <button class="nav-btn" title="上一章: 第一章 测试章节 (Ctrl + ←)">
+                                <span class="btn-icon">‹</span>
+                                <span class="btn-text">上一章</span>
+                            </button>
+                            
+                            <div class="chapter-info">
+                                <h3 title="第二章 中间章节">第二章 中间章节</h3>
+                                <div class="chapter-progress" style="--progress-width: 66%;">2 / 3</div>
+                            </div>
+                            
+                            <button class="nav-btn" title="下一章: 第三章 最后章节 (Ctrl + →)">
+                                <span class="btn-text">下一章</span>
+                                <span class="btn-icon">›</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>测试场景3：最后章节</h3>
+                <div class="text-content" style="height: 200px; border: 1px solid var(--border-color);">
+                    <div class="chapter-text">
+                        <h4>第三章 最后章节</h4>
+                        <p>这是最后章节的测试内容。</p>
+                        <p>在最后章节中，下一章按钮应该是禁用状态。</p>
+                    </div>
+
+                    <div class="bottom-navigation">
+                        <div class="navigation-content">
+                            <button class="nav-btn" title="上一章: 第二章 中间章节 (Ctrl + ←)">
+                                <span class="btn-icon">‹</span>
+                                <span class="btn-text">上一章</span>
+                            </button>
+                            
+                            <div class="chapter-info">
+                                <h3 title="第三章 最后章节">第三章 最后章节</h3>
+                                <div class="chapter-progress" style="--progress-width: 100%;">3 / 3</div>
+                            </div>
+                            
+                            <button class="nav-btn" disabled title="已是最后一章">
+                                <span class="btn-text">下一章</span>
+                                <span class="btn-icon">›</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>功能特性验证</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div>
+                        <h4>✅ 视觉效果</h4>
+                        <ul>
+                            <li>渐变背景</li>
+                            <li>圆角边框</li>
+                            <li>阴影效果</li>
+                            <li>Hover动画</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>✅ 交互体验</h4>
+                        <ul>
+                            <li>按钮波纹效果</li>
+                            <li>禁用状态管理</li>
+                            <li>Tooltip提示</li>
+                            <li>键盘快捷键</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>✅ 响应式设计</h4>
+                        <ul>
+                            <li>移动端适配</li>
+                            <li>文字自动隐藏</li>
+                            <li>图标放大</li>
+                            <li>间距调整</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的主题切换功能用于测试
+        document.getElementById('toggleTheme').addEventListener('click', function() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            this.textContent = isDark ? '🌙 夜间' : '☀️ 日间';
+        });
+
+        // 添加按钮点击效果测试
+        document.querySelectorAll('.nav-btn:not([disabled])').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                // 波纹效果
+                const rect = this.getBoundingClientRect();
+                const ripple = document.createElement('span');
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    left: ${x}px;
+                    top: ${y}px;
+                    background: rgba(255, 255, 255, 0.4);
+                    border-radius: 50%;
+                    pointer-events: none;
+                    animation: ripple-animation 0.6s ease-out;
+                    z-index: 1;
+                `;
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    if (ripple.parentNode) {
+                        ripple.parentNode.removeChild(ripple);
+                    }
+                }, 600);
+                
+                // 模拟章节切换
+                console.log('点击了：', this.textContent.trim());
+            });
+        });
+
+        // 添加波纹动画CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple-animation {
+                0% {
+                    transform: scale(0);
+                    opacity: 1;
+                }
+                100% {
+                    transform: scale(2);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

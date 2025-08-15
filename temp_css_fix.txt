@@ -1,0 +1,84 @@
+#aside-content-column li {
+    margin: 0 0 12px 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px; /* 统一高度确保对齐 */
+}
+
+.special-column-name {
+    display: flex;
+    align-items: center;
+    color: rgb(85, 86, 102);
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1.5;
+    flex: 1;
+    gap: 10px; /* 统一间距 */
+    height: 44px; /* 与li高度一致 */
+    /* 重置所有可能影响对齐的属性 */
+    vertical-align: middle;
+}
+
+[data-theme="dark"] .special-column-name {
+    color: var(--text-secondary);
+}
+
+.special-column-name:hover {
+    color: rgb(9, 9, 59);
+}
+
+[data-theme="dark"] .special-column-name:hover {
+    color: var(--accent-color);
+}
+
+.special-column-bar {
+    width: 3px;
+    height: 20px;
+    background-color: rgb(9, 9, 59);
+    border-radius: 2px;
+    flex-shrink: 0;
+    /* 移除align-self，使用父容器的align-items */
+}
+
+.special-column-bar-second {
+    background-color: rgb(255, 165, 0);
+}
+
+.special-column-name img {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    object-fit: cover;
+    display: block;
+}
+
+.right-sidebar .special-column-name {
+    overflow: visible !important;
+    white-space: normal !important;
+}
+
+.special-column-name span {
+    /* 简化span样式，移除复杂的flex设置 */
+    flex: 1; /* 占据剩余空间 */
+    line-height: 1.4;
+    /* 移除display: flex，恢复正常文本流 */
+    color: inherit; /* 继承父元素颜色 */
+    /* 确保文字垂直居中 */
+    margin: 0;
+    padding: 0;
+}
+
+.special-column-num {
+    color: rgb(153, 154, 170);
+    font-size: 12px;
+    /* 简化篇数样式 */
+    flex-shrink: 0; /* 防止压缩 */
+    line-height: 1.4;
+}
+
+[data-theme="dark"] .special-column-num {
+    color: var(--text-muted);
+}

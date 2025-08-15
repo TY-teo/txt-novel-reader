@@ -1704,4 +1704,314 @@ html, body {
     position: relative;
 }
 
+/* ========================================
+   底部章节导航样式
+   ======================================== */
 
+/* 底部导航容器 - 滚动到底部时显示 */
+.bottom-navigation {
+    position: relative;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.5rem;
+    margin: 2rem 0 0 0;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    
+    /* 默认隐藏 - 滚动触发显示 */
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    visibility: hidden;
+}
+
+/* 内联底部导航 - 直接作为内容的一部分显示 */
+.bottom-navigation-inline {
+    position: relative;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin: 3rem 0 2rem 0; /* 增加上边距，与正文内容分开 */
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    
+    /* 直接显示，无需动画 */
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+/* 显示状态 */
+.bottom-navigation.visible {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+/* 增强的动画效果 */
+.bottom-navigation.visible .nav-btn {
+    animation: slideInUp 0.3s ease 0.1s both;
+}
+
+.bottom-navigation.visible .chapter-info {
+    animation: fadeInUp 0.4s ease 0.05s both;
+}
+
+/* 动画关键帧 */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+[data-theme="dark"] .bottom-navigation {
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    border-color: var(--border-color);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .bottom-navigation-inline {
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    border-color: var(--border-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* 导航内容区域 */
+.navigation-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    max-width: 100%;
+}
+
+/* 底部导航章节信息区域 */
+.bottom-navigation .chapter-info,
+.bottom-navigation-inline .chapter-info {
+    flex: 1;
+    text-align: center;
+    min-width: 0; /* 允许文本省略 */
+}
+
+.bottom-navigation .chapter-info h3,
+.bottom-navigation-inline .chapter-info h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 导航按钮样式 */
+.nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: calc(var(--border-radius) - 2px);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition);
+    min-width: 110px;
+    height: 44px;
+    text-decoration: none;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.nav-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.2);
+}
+
+.nav-btn:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.nav-btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* 按钮图标样式 */
+.nav-btn .btn-icon {
+    font-size: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.nav-btn:hover:not(:disabled) .btn-icon {
+    transform: scale(1.1);
+}
+
+/* 波纹效果 */
+.nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.nav-btn:active:not(:disabled)::before {
+    width: 120px;
+    height: 120px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .bottom-navigation {
+        padding: 0.75rem 1rem;
+        margin: 1.5rem 0 0 0;
+        border-radius: calc(var(--border-radius) - 2px);
+    }
+    
+    .navigation-content {
+        gap: 0.75rem;
+    }
+    
+    .chapter-info h3 {
+        font-size: 1rem;
+    }
+    
+    .chapter-progress {
+        font-size: 0.8rem;
+    }
+    
+    .nav-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        min-width: 90px;
+        height: 40px;
+    }
+    
+    .nav-btn .btn-text {
+        display: none;
+    }
+    
+    .nav-btn .btn-icon {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .bottom-navigation {
+        padding: 0.6rem 0.75rem;
+        margin: 1rem 0 0 0;
+    }
+    
+    .navigation-content {
+        gap: 0.5rem;
+    }
+    
+    .chapter-info h3 {
+        font-size: 0.9rem;
+    }
+    
+    .nav-btn {
+        padding: 0.5rem 0.75rem;
+        min-width: 80px;
+        height: 36px;
+    }
+}
+
+/* 夜间模式下的特殊效果 */
+[data-theme="dark"] .nav-btn {
+    background: var(--accent-color);
+}
+
+[data-theme="dark"] .nav-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .nav-btn:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+}
+
+/* 底部导航进度指示器 */
+.bottom-navigation .chapter-progress {
+    position: relative;
+    --progress-width: 0%;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.bottom-navigation .chapter-progress::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: var(--bg-tertiary);
+    border-radius: 1px;
+    margin-top: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.bottom-navigation .chapter-progress::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: var(--progress-width);
+    height: 2px;
+    background: var(--accent-color);
+    border-radius: 1px;
+    transition: width 0.3s ease;
+    z-index: 1;
+}
+
+/* 平滑的hover效果 */
+.bottom-navigation:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .bottom-navigation:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}

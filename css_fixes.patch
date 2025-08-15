@@ -1,0 +1,96 @@
+--- a/css/styles.css
++++ b/css/styles.css
+@@ -1014,23 +1014,25 @@
+ #aside-content-column li {
+     margin: 0 0 12px 0;
+     padding: 0;
+     display: flex;
+-    align-items: center; /* 确保整行居中对齐 */
++    align-items: center;
+     justify-content: space-between;
+-    min-height: 40px; /* 给足够高度确保对齐 */
++    min-height: 44px; /* 统一高度确保对齐 */
+ }
+ 
+ .special-column-name {
+     display: flex;
+-    align-items: center; /* 竖线、图标、文字垂直居中 */
++    align-items: center;
+     color: rgb(85, 86, 102);
+     text-decoration: none;
+     font-size: 14px;
+-    line-height: 1.4; /* 调整行高避免偏移 */
++    line-height: 1.5;
+     flex: 1;
+-    gap: 8px; /* 确保元素之间有间距 */
+-    height: 40px; /* 固定高度确保对齐 */
++    gap: 10px; /* 统一间距 */
++    height: 44px; /* 与li高度一致 */
++    /* 重置所有可能影响对齐的属性 */
++    vertical-align: middle;
+ }
+ 
+ [data-theme="dark"] .special-column-name {
+@@ -1047,9 +1049,9 @@
+ .special-column-bar {
+     width: 3px;
+     height: 20px;
+     background-color: rgb(9, 9, 59);
+     border-radius: 2px;
+-    flex-shrink: 0; /* 防止竖条被压缩 */
+-    align-self: center; /* 竖线自身居中 */
++    flex-shrink: 0;
++    /* 移除align-self，使用父容器的align-items */
+ }
+ 
+ .special-column-bar-second {
+@@ -1060,32 +1062,28 @@
+     width: 32px;
+     height: 32px;
+     border-radius: 4px;
+-    flex-shrink: 0; /* 防止图片被压缩 */
+-    object-fit: cover; /* 确保图片显示正确 */
++    flex-shrink: 0;
++    object-fit: cover;
+     display: block;
+-    align-self: center; /* 图标自身居中 */
+ }
+ 
+ .right-sidebar .special-column-name {
+-    overflow: visible !important; /* 覆盖右侧边栏的hidden设置 */
+-    white-space: normal !important; /* 确保文字正常换行 */
++    overflow: visible !important;
++    white-space: normal !important;
+ }
+ 
+ .special-column-name span {
+-    flex: 1;
++    /* 简化span样式，移除复杂的flex设置 */
++    flex: 1; /* 占据剩余空间 */
+     line-height: 1.4;
+-    display: flex;
+-    align-items: center; /* 文字内容垂直居中 */
+-    height: 32px; /* 与图标同高 */
+-    color: rgb(85, 86, 102); /* 确保文字颜色可见 */
++    /* 移除display: flex，恢复正常文本流 */
++    color: inherit; /* 继承父元素颜色 */
++    /* 确保文字垂直居中 */
++    margin: 0;
++    padding: 0;
+ }
+ 
+-[data-theme="dark"] .special-column-name span {
+-    color: var(--text-secondary); /* 暗色主题下的文字颜色 */
+-}
+-
+ .special-column-num {
+     color: rgb(153, 154, 170);
+     font-size: 12px;
+-    margin-left: 8px;
+-    display: flex;
+-    align-items: center; /* 篇数也要居中 */
+-    height: 32px; /* 与图标同高 */
++    /* 简化篇数样式 */
++    flex-shrink: 0; /* 防止压缩 */
++    line-height: 1.4;
+ }

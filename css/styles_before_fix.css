@@ -275,9 +275,34 @@ body {
     padding: 2rem 0;
 }
 
+.chapter-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
 
+.nav-btn {
+    padding: 0.5rem 1rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
 
+.nav-btn:hover:not(:disabled) {
+    background-color: var(--accent-color);
+    color: white;
+}
 
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 .chapter-info {
     text-align: center;
@@ -441,6 +466,16 @@ body {
         padding: 0 1rem;
     }
     
+    .chapter-navigation {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .nav-btn {
+        width: 100%;
+        max-width: 200px;
+    }
     
     .reading-controls {
         flex-direction: column;
@@ -1409,75 +1444,13 @@ body {
 }
 
 
-/* 文件选择按钮修复 - 确保可点击性 */
-.header .btn {
-    position: relative;
-    z-index: 101;
-    pointer-events: auto;
-    user-select: none;
-}
-
-.header .controls {
-    position: relative;
-    z-index: 101;
-}
-
-/* 确保隐藏的文件输入框不影响布局 */
-#fileInput {
-    position: absolute !important;
-    left: -9999px !important;
-    width: 1px !important;
-    height: 1px !important;
-    opacity: 0 !important;
-}
-
-/* 按钮状态确保 */
-.btn:not(:disabled) {
-    pointer-events: auto;
-}
-
-.btn:active {
-    transform: translateY(0px);
-}
-
-/* 全屏布局优化 */
-html, body {
-    height: 100% !important;
-    overflow: hidden !important; /* 禁用页面滚动 */
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.app-container {
-    height: 100vh !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    min-height: 100vh !important;
-}
-
-.main-content {
-    height: calc(100vh - 80px) !important;
-    max-height: calc(100vh - 80px) !important;
-}
-
-/* 右边栏全屏优化 */
-.right-sidebar {
-    height: 100% !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    gap: 0 !important;
-}
-
-/* 禁用右边栏滚动，但保持点击功能 */
-.right-sidebar, .right-sidebar * {
-    overflow: hidden !important;
-}
-
-/* 确保右边栏内容适应高度 */
-.right-sidebar > * {
-    flex-shrink: 0;
-}
-
+/* 打印样式 */
+@media print {
+    .header,
+    .sidebar,
+    .recommendations-panel,
+    .right-sidebar,
+    .chapter-navigation,
     .reading-controls,
     .modal {
         display: none;
@@ -1491,217 +1464,3 @@ html, body {
         line-height: 1.6;
     }
 }
-
-
-/* 文件选择按钮修复 - 确保可点击性 */
-.header .btn {
-    position: relative;
-    z-index: 101;
-    pointer-events: auto;
-    user-select: none;
-}
-
-.header .controls {
-    position: relative;
-    z-index: 101;
-}
-
-/* 确保隐藏的文件输入框不影响布局 */
-#fileInput {
-    position: absolute !important;
-    left: -9999px !important;
-    width: 1px !important;
-    height: 1px !important;
-    opacity: 0 !important;
-}
-
-/* 按钮状态确保 */
-.btn:not(:disabled) {
-    pointer-events: auto;
-}
-
-.btn:active {
-    transform: translateY(0px);
-}
-/* 全屏化样式调整 */
-
-/* 1. 设置html和body为100%高度，禁用页面滚动 */
-html, body {
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important; /* 禁用页面级别滚动 */
-}
-
-/* 2. 应用容器填满整个视口 */
-.app-container {
-    height: 100vh !important;
-    min-height: 100vh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* 3. 主内容区域调整为全屏布局 */
-.main-content {
-    display: grid !important;
-    grid-template-columns: 280px 280px 1fr 300px !important;
-    grid-template-areas: "sidebar recommendations reader rightsidebar" !important;
-    flex: 1 !important;
-    height: calc(100vh - 80px) !important; /* 减去header高度 */
-    max-height: calc(100vh - 80px) !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* 4. 右边栏全屏高度设置，禁用滚动 */
-.right-sidebar {
-    grid-area: rightsidebar !important;
-    width: 300px !important;
-    background-color: var(--bg-secondary) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important; /* 完全禁用滚动 */
-    padding: 0 !important; /* 移除内边距，上下边缘顶到屏幕 */
-    gap: 0 !important;
-    height: 100% !important; /* 填满整个可用高度 */
-    min-height: 100% !important;
-    max-height: 100% !important;
-    align-self: stretch !important; /* 拉伸到容器全高 */
-    position: relative !important; /* 确保定位正确 */
-}
-
-/* 5. 禁用右边栏鼠标滚动事件 */
-.right-sidebar, .right-sidebar * {
-    overflow: hidden !important;
-    pointer-events: auto !important; /* 保持点击功能 */
-    -webkit-overflow-scrolling: none !important;
-}
-
-/* 6. 右边栏内容区域调整 */
-.right-sidebar .aside-box {
-    margin: 0 !important;
-    padding: 8px !important;
-    flex-shrink: 0 !important; /* 防止压缩 */
-    overflow: hidden !important;
-}
-
-/* 7. 确保其他栏目也填满屏幕高度 */
-.sidebar, .recommendations-panel {
-    height: 100% !important;
-    max-height: 100% !important;
-    overflow-y: auto !important; /* 保持这两个栏目的滚动功能 */
-}
-
-/* 8. 阅读区域调整 */
-.reader {
-    grid-area: reader !important;
-    display: flex !important;
-    flex-direction: column !important;
-    min-width: 0 !important;
-    overflow: hidden !important;
-    height: 100% !important;
-    max-height: 100% !important;
-}
-
-/* 9. 移除相关专栏的所有CSS样式（清理残留样式） */
-.related-columns,
-.related-content,
-.related-list,
-.related-column-name,
-.related-column-bar,
-.related-column-bar-orange,
-.related-column-num {
-    display: none !important;
-}
-
-/* 10. 确保header固定高度 */
-.header {
-    height: 80px !important;
-    min-height: 80px !important;
-    max-height: 80px !important;
-    flex-shrink: 0 !important;
-}
-
-/* 11. 响应式设计更新 - 保持原有断点但调整布局 */
-@media (max-width: 1399px) {
-    .main-content {
-        grid-template-columns: 280px 280px 1fr !important;
-        grid-template-areas: "sidebar recommendations reader" !important;
-    }
-    
-    .right-sidebar {
-        display: none !important;
-    }
-}
-
-@media (max-width: 1199px) {
-    .main-content {
-        grid-template-columns: 280px 1fr !important;
-        grid-template-areas: "sidebar reader" !important;
-    }
-    
-    .recommendations-panel,
-    .right-sidebar {
-        display: none !important;
-    }
-}
-
-@media (max-width: 768px) {
-    .main-content {
-        grid-template-columns: 1fr !important;
-        grid-template-areas: "reader" !important;
-        height: calc(100vh - 120px) !important;
-        max-height: calc(100vh - 120px) !important;
-    }
-    
-    .sidebar,
-    .recommendations-panel,
-    .right-sidebar {
-        display: none !important;
-    }
-    
-    .sidebar.open {
-        display: flex !important;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        height: 100vh !important;
-        z-index: 200 !important;
-    }
-}
-
-/* ========================================
-   重构后的章节导航样式 - 固定在正文底部
-   ======================================== */
-
-/* 章节文本容器 - 包含实际章节内容 */
-.chapter-text {
-    flex: 1;
-    line-height: 1.8;
-    font-size: inherit;
-    color: var(--text-primary);
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    padding-bottom: 2rem;
-    min-height: 200px; /* 确保有足够空间显示内容 */
-}
-
-/* 更新后的text-content样式 - 现在是容器，包含章节文本和导航 */
-.text-content {
-    /* 保持原有的基本样式 */
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    line-height: 1.8;
-    font-size: 16px;
-    color: var(--text-primary);
-    overflow-y: auto;
-    max-height: calc(100vh - 120px);
-    padding: 1rem;
-    position: relative;
-}
-
-
