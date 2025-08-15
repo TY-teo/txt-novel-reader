@@ -15,6 +15,7 @@ class NovelReader {
         this.bindEvents();
         this.loadSettings();
         this.addVisibilityChangeHandler();
+        this.createBottomNavigation();
     }
 
     addVisibilityChangeHandler() {
@@ -76,6 +77,14 @@ class NovelReader {
         this.colorBtns = document.querySelectorAll('.color-btn');
         this.readerContent = document.querySelector('.reader-content');
         this.readingArea = document.querySelector('.reading-area');
+        
+        // 底部导航元素
+        this.bottomNavigation = document.getElementById('bottomNavigation');
+        this.bottomPrevBtn = document.getElementById('bottomPrevBtn');
+        this.bottomNextBtn = document.getElementById('bottomNextBtn');
+        this.bottomChapterTitle = document.getElementById('bottomChapterTitle');
+        this.bottomChapterProgress = document.getElementById('bottomChapterProgress');
+        
     }
 
     bindEvents() {
@@ -123,11 +132,15 @@ class NovelReader {
             }
         });
         
+        
         // 分类专栏展开/收起功能
         this.initColumnExpandCollapse();
         
         // 处理图片加载错误
         this.handleImageErrors();
+        
+        // 绑定底部导航事件
+        this.bindBottomNavigationEvents();
     }
 
     async handleFileSelect(event) {
@@ -300,7 +313,17 @@ class NovelReader {
         const chapter = this.chapters[index];
         
         if (this.currentChapterTitle) this.currentChapterTitle.textContent = chapter.title;
-        this.textContent.textContent = chapter.content;
+        
+        // 只更新章节文本内容
+        const chapterTextElement = document.getElementById('chapterText');
+        if (chapterTextElement) {
+            chapterTextElement.textContent = chapter.content;
+        } else {
+            // 如果chapterText元素不存在，重新创建结构
+            this.textContent.innerHTML = `<div class="chapter-text" id="chapterText">${chapter.content}</div>`;
+            this.initializeElements();
+        }
+        
         if (this.chapterProgress) this.chapterProgress.textContent = `${index + 1} / ${this.chapters.length}`;
         
         const progressPercentage = ((index + 1) / this.chapters.length) * 100;
@@ -309,6 +332,7 @@ class NovelReader {
         if (this.prevChapterBtn) this.prevChapterBtn.disabled = index === 0;
         if (this.nextChapterBtn) this.nextChapterBtn.disabled = index === this.chapters.length - 1;
         
+        
         document.querySelectorAll('.chapter-item').forEach((item, i) => {
             item.classList.toggle('active', i === index);
         });
@@ -316,11 +340,15 @@ class NovelReader {
         // 自动滚动目录到当前章节
         this.scrollSidebarToActiveChapter(index);
         
+        // 更新底部导航
+        this.updateBottomNavigation();
+        
         this.saveReadingProgress();
         this.textContent.scrollTop = 0;
         
         // 添加滚动事件监听，实时保存滚动位置
         this.addScrollProgressSaver();
+        
     }
 
     addScrollProgressSaver() {
@@ -799,6 +827,214 @@ class NovelReader {
             });
         });
     }
+
+    // ========================================
+    // 底部章节导航功能实现
+    // ========================================
+    
+    /**
+     * 创建底部导航
+     * 初始化底部导航组件，设置默认状态
+     */
+    createBottomNavigation() {
+        console.log('初始化底部章节导航');
+        
+        // 确保底部导航元素存在
+        if (!this.bottomNavigation) {
+            console.warn('底部导航元素未找到');
+            return;
+        }
+        
+        // 初始状态：隐藏导航（无内容时）
+        this.bottomNavigation.style.display = 'none';
+    }
+    
+    /**
+     * 绑定底部导航事件
+     * 为底部导航按钮添加事件监听器
+     */
+    bindBottomNavigationEvents() {
+        if (!this.bottomPrevBtn || !this.bottomNextBtn) {
+            console.warn('底部导航按钮元素未找到');
+            return;
+        }
+        
+        // 上一章按钮事件
+        this.bottomPrevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.previousChapter();
+        });
+        
+        // 下一章按钮事件
+        this.bottomNextBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.nextChapter();
+        });
+        
+        // 添加按钮点击波纹效果
+        [this.bottomPrevBtn, this.bottomNextBtn].forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.createRippleEffect(e, btn);
+            });
+        });
+        
+        console.log('底部导航事件绑定完成');
+    }
+    
+    /**
+     * 更新底部导航状态
+     * 当章节发生变化时更新导航按钮状态和章节信息
+     */
+    updateBottomNavigation() {
+        if (!this.currentBook || !this.chapters || this.chapters.length === 0) {
+            // 无内容时隐藏导航
+            if (this.bottomNavigation) {
+                this.bottomNavigation.style.display = 'none';
+            }
+            return;
+        }
+        
+        // 有内容时显示导航
+        if (this.bottomNavigation) {
+            this.bottomNavigation.style.display = 'block';
+        }
+        
+        const currentChapter = this.chapters[this.currentChapterIndex];
+        
+        // 更新章节标题
+        if (this.bottomChapterTitle && currentChapter) {
+            this.bottomChapterTitle.textContent = currentChapter.title;
+            this.bottomChapterTitle.title = currentChapter.title; // 提供完整标题的tooltip
+        }
+        
+        // 更新章节进度
+        if (this.bottomChapterProgress) {
+            const progressText = `${this.currentChapterIndex + 1} / ${this.chapters.length}`;
+            this.bottomChapterProgress.textContent = progressText;
+            
+            // 更新进度条CSS变量（用于::before伪元素）
+            const progressPercentage = ((this.currentChapterIndex + 1) / this.chapters.length) * 100;
+            this.bottomChapterProgress.style.setProperty('--progress-width', `${progressPercentage}%`);
+        }
+        
+        // 更新按钮状态
+        this.updateBottomNavigationButtons();
+        
+        console.log(`底部导航已更新: ${currentChapter?.title} (${this.currentChapterIndex + 1}/${this.chapters.length})`);
+    }
+    
+    /**
+     * 更新底部导航按钮状态
+     * 根据当前章节位置启用/禁用相应按钮
+     */
+    updateBottomNavigationButtons() {
+        if (!this.bottomPrevBtn || !this.bottomNextBtn) return;
+        
+        const isFirstChapter = this.currentChapterIndex <= 0;
+        const isLastChapter = this.currentChapterIndex >= this.chapters.length - 1;
+        
+        // 上一章按钮状态
+        this.bottomPrevBtn.disabled = isFirstChapter;
+        if (isFirstChapter) {
+            this.bottomPrevBtn.title = '已是第一章';
+        } else {
+            const prevChapter = this.chapters[this.currentChapterIndex - 1];
+            this.bottomPrevBtn.title = `上一章: ${prevChapter.title} (Ctrl + ←)`;
+        }
+        
+        // 下一章按钮状态
+        this.bottomNextBtn.disabled = isLastChapter;
+        if (isLastChapter) {
+            this.bottomNextBtn.title = '已是最后一章';
+        } else {
+            const nextChapter = this.chapters[this.currentChapterIndex + 1];
+            this.bottomNextBtn.title = `下一章: ${nextChapter.title} (Ctrl + →)`;
+        }
+        
+        // 添加视觉反馈类
+        this.bottomPrevBtn.classList.toggle('btn-disabled', isFirstChapter);
+        this.bottomNextBtn.classList.toggle('btn-disabled', isLastChapter);
+    }
+    
+    /**
+     * 创建按钮点击波纹效果
+     * 为按钮添加交互反馈动画
+     * @param {Event} event - 点击事件
+     * @param {HTMLElement} button - 按钮元素
+     */
+    createRippleEffect(event, button) {
+        // 如果按钮被禁用，不显示波纹效果
+        if (button.disabled) return;
+        
+        const rect = button.getBoundingClientRect();
+        const ripple = document.createElement('span');
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+        
+        ripple.style.cssText = `
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            left: ${x}px;
+            top: ${y}px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: ripple-animation 0.6s ease-out;
+            z-index: 1;
+        `;
+        
+        // 添加动画CSS（如果不存在）
+        if (!document.getElementById('ripple-animation-style')) {
+            const style = document.createElement('style');
+            style.id = 'ripple-animation-style';
+            style.textContent = `
+                @keyframes ripple-animation {
+                    0% {
+                        transform: scale(0);
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: scale(2);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        button.appendChild(ripple);
+        
+        // 动画完成后移除元素
+        setTimeout(() => {
+            if (ripple.parentNode) {
+                ripple.parentNode.removeChild(ripple);
+            }
+        }, 600);
+    }
+    
+    /**
+     * 显示底部导航
+     * 当有书籍内容时显示导航
+     */
+    showBottomNavigation() {
+        if (this.bottomNavigation) {
+            this.bottomNavigation.style.display = 'block';
+            this.updateBottomNavigation();
+        }
+    }
+    
+    /**
+     * 隐藏底部导航
+     * 当没有书籍内容时隐藏导航
+     */
+    hideBottomNavigation() {
+        if (this.bottomNavigation) {
+            this.bottomNavigation.style.display = 'none';
+        }
+    }
+
 }
 
 document.addEventListener('DOMContentLoaded', () => {

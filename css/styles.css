@@ -275,34 +275,9 @@ body {
     padding: 2rem 0;
 }
 
-.chapter-navigation {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
 
-.nav-btn {
-    padding: 0.5rem 1rem;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    color: var(--text-primary);
-    transition: var(--transition);
-}
 
-.nav-btn:hover:not(:disabled) {
-    background-color: var(--accent-color);
-    color: white;
-}
 
-.nav-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
 
 .chapter-info {
     text-align: center;
@@ -466,16 +441,6 @@ body {
         padding: 0 1rem;
     }
     
-    .chapter-navigation {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-    
-    .nav-btn {
-        width: 100%;
-        max-width: 200px;
-    }
     
     .reading-controls {
         flex-direction: column;
@@ -1513,13 +1478,6 @@ html, body {
     flex-shrink: 0;
 }
 
-/* 打印样式 */
-@media print {
-    .header,
-    .sidebar,
-    .recommendations-panel,
-    .right-sidebar,
-    .chapter-navigation,
     .reading-controls,
     .modal {
         display: none;
@@ -1713,4 +1671,280 @@ html, body {
         height: 100vh !important;
         z-index: 200 !important;
     }
+}
+
+/* ========================================
+   重构后的章节导航样式 - 固定在正文底部
+   ======================================== */
+
+/* 章节文本容器 - 包含实际章节内容 */
+.chapter-text {
+    flex: 1;
+    line-height: 1.8;
+    font-size: inherit;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    padding-bottom: 2rem;
+    min-height: 200px; /* 确保有足够空间显示内容 */
+}
+
+/* 更新后的text-content样式 - 现在是容器，包含章节文本和导航 */
+.text-content {
+    /* 保持原有的基本样式 */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.8;
+    font-size: 16px;
+    color: var(--text-primary);
+    overflow-y: auto;
+    max-height: calc(100vh - 120px);
+    padding: 1rem;
+    position: relative;
+}
+
+/* ========================================
+   底部章节导航样式
+   ======================================== */
+
+/* 底部导航容器 - 固定在正文底部 */
+.bottom-navigation {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.5rem;
+    margin: 2rem 0 0 0;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    transition: var(--transition);
+}
+
+[data-theme="dark"] .bottom-navigation {
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+    border-color: var(--border-color);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 导航内容区域 */
+.navigation-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    max-width: 100%;
+}
+
+/* 底部导航章节信息区域 */
+.bottom-navigation .chapter-info {
+    flex: 1;
+    text-align: center;
+    min-width: 0; /* 允许文本省略 */
+}
+
+.bottom-navigation .chapter-info h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 导航按钮样式 */
+.nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: calc(var(--border-radius) - 2px);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition);
+    min-width: 110px;
+    height: 44px;
+    text-decoration: none;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.nav-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.2);
+}
+
+.nav-btn:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.nav-btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* 按钮图标样式 */
+.nav-btn .btn-icon {
+    font-size: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.nav-btn:hover:not(:disabled) .btn-icon {
+    transform: scale(1.1);
+}
+
+/* 波纹效果 */
+.nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.nav-btn:active:not(:disabled)::before {
+    width: 120px;
+    height: 120px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .bottom-navigation {
+        padding: 0.75rem 1rem;
+        margin: 1.5rem 0 0 0;
+        border-radius: calc(var(--border-radius) - 2px);
+    }
+    
+    .navigation-content {
+        gap: 0.75rem;
+    }
+    
+    .chapter-info h3 {
+        font-size: 1rem;
+    }
+    
+    .chapter-progress {
+        font-size: 0.8rem;
+    }
+    
+    .nav-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        min-width: 90px;
+        height: 40px;
+    }
+    
+    .nav-btn .btn-text {
+        display: none;
+    }
+    
+    .nav-btn .btn-icon {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .bottom-navigation {
+        padding: 0.6rem 0.75rem;
+        margin: 1rem 0 0 0;
+    }
+    
+    .navigation-content {
+        gap: 0.5rem;
+    }
+    
+    .chapter-info h3 {
+        font-size: 0.9rem;
+    }
+    
+    .nav-btn {
+        padding: 0.5rem 0.75rem;
+        min-width: 80px;
+        height: 36px;
+    }
+}
+
+/* 夜间模式下的特殊效果 */
+[data-theme="dark"] .nav-btn {
+    background: var(--accent-color);
+}
+
+[data-theme="dark"] .nav-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .nav-btn:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+}
+
+/* 底部导航进度指示器 */
+.bottom-navigation .chapter-progress {
+    position: relative;
+    --progress-width: 0%;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.bottom-navigation .chapter-progress::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: var(--bg-tertiary);
+    border-radius: 1px;
+    margin-top: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.bottom-navigation .chapter-progress::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: var(--progress-width);
+    height: 2px;
+    background: var(--accent-color);
+    border-radius: 1px;
+    transition: width 0.3s ease;
+    z-index: 1;
+}
+
+/* 平滑的hover效果 */
+.bottom-navigation:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .bottom-navigation:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }

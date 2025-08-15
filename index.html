@@ -158,7 +158,29 @@
                     
                     <div class="reading-area" id="readingArea" style="display: none;">
                         <div class="text-content" id="textContent">
-                            <!-- 章节内容将在这里显示 -->
+                            <div class="chapter-text" id="chapterText">
+                                <!-- 章节内容将在这里显示 -->
+                            </div>
+                            
+                            <!-- 底部章节导航 -->
+                            <div class="bottom-navigation" id="bottomNavigation" style="display: none;">
+                                <div class="navigation-content">
+                                    <button class="nav-btn" id="bottomPrevBtn" title="上一章 (Ctrl + ←)">
+                                        <span class="btn-icon">‹</span>
+                                        <span class="btn-text">上一章</span>
+                                    </button>
+                                    
+                                    <div class="chapter-info" id="bottomChapterInfo">
+                                        <h3 id="bottomChapterTitle">章节标题</h3>
+                                        <div class="chapter-progress" id="bottomChapterProgress">1 / 100</div>
+                                    </div>
+                                    
+                                    <button class="nav-btn" id="bottomNextBtn" title="下一章 (Ctrl + →)">
+                                        <span class="btn-text">下一章</span>
+                                        <span class="btn-icon">›</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="reading-controls">
