@@ -14,13 +14,35 @@
                 <img src="images/图标.png" alt="图标1" style="width: 48px; height: 48px; display: inline-block; margin: 0; padding: 0; vertical-align: top;"><!--
                 --><img src="images/图标1.png" alt="图标2" style="width: 144px; height: 48px; display: inline-block; margin: 0; padding: 0; vertical-align: top;">
             </h1>
+            
+            <!-- 搜索框容器 - 绝对定位居中 -->
+            <div class="search-container">
+                <div class="search-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" 
+                           id="searchInput" 
+                           class="search-input" 
+                           placeholder="搜索章节内容" 
+                           maxlength="100"
+                           autocomplete="off">
+                </div>
+                <div class="search-buttons">
+                    <button class="search-btn" id="searchBtn">
+                        <span>搜索</span>
+                    </button>
+                    <button class="ai-search-btn" id="aiSearchBtn">
+                        <span>AI 搜索</span>
+                    </button>
+                </div>
+            </div>
+            
             <div class="controls">
                 <input type="file" id="fileInput" accept=".txt" style="display: none;">
                 <button class="btn btn-primary">
-                    选择文件
+                    👤 用户登录
                 </button>
                 <button class="btn btn-secondary" id="toggleSidebar">
-                    📋 目录
+                    注册
                 </button>
                 <button class="btn btn-secondary" id="toggleTheme">
                     🌙 夜间

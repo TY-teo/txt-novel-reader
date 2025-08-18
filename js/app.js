@@ -64,6 +64,11 @@ class NovelReader {
         this.decreaseFontBtn = document.getElementById('decreaseFont');
         this.increaseFontBtn = document.getElementById('increaseFont');
         
+        // 搜索相关元素
+        this.searchInput = document.getElementById('searchInput');
+        this.searchBtn = document.getElementById('searchBtn');
+        this.aiSearchBtn = document.getElementById('aiSearchBtn');
+        
         // 设置相关元素
         this.openSettingsBtn = document.getElementById('openSettings');
         this.settingsModal = document.getElementById('settingsModal');
@@ -105,6 +110,22 @@ class NovelReader {
         this.decreaseFontBtn.addEventListener('click', () => this.changeFontSize(-2));
         this.increaseFontBtn.addEventListener('click', () => this.changeFontSize(2));
         document.addEventListener('keydown', (e) => this.handleKeydown(e));
+        
+        // 搜索相关事件
+        if (this.searchBtn) {
+            this.searchBtn.addEventListener('click', () => this.performSearch());
+        }
+        if (this.aiSearchBtn) {
+            this.aiSearchBtn.addEventListener('click', () => this.performAISearch());
+        }
+        if (this.searchInput) {
+            this.searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    this.performSearch();
+                }
+            });
+            this.searchInput.addEventListener('input', (e) => this.handleSearchInput(e));
+        }
         
         // 设置相关事件
         this.openSettingsBtn.addEventListener('click', () => this.openSettingsModal());
@@ -813,6 +834,173 @@ class NovelReader {
                 this.parentNode.insertBefore(fallbackIcon, this);
             });
         });
+    }
+
+    // ==============================
+    // 搜索功能相关方法
+    // ==============================
+
+    // 执行搜索
+    performSearch() {
+        const query = this.searchInput?.value?.trim();
+        if (!query) {
+            this.showSearchMessage('请输入搜索关键词');
+            return;
+        }
+
+        if (!this.currentBook || !this.chapters.length) {
+            this.showSearchMessage('请先加载小说文件');
+            return;
+        }
+
+        console.log('执行搜索:', query);
+        this.searchInContent(query);
+    }
+
+    // AI搜索（暂时使用普通搜索）
+    performAISearch() {
+        const query = this.searchInput?.value?.trim();
+        if (!query) {
+            this.showSearchMessage('请输入搜索关键词');
+            return;
+        }
+
+        if (!this.currentBook || !this.chapters.length) {
+            this.showSearchMessage('请先加载小说文件');
+            return;
+        }
+
+        console.log('执行AI搜索:', query);
+        // 暂时使用普通搜索，后续可以扩展为更智能的搜索
+        this.searchInContent(query, true);
+    }
+
+    // 在内容中搜索
+    searchInContent(query, isAISearch = false) {
+        const results = [];
+        const searchQuery = query.toLowerCase();
+
+        // 搜索所有章节
+        this.chapters.forEach((chapter, chapterIndex) => {
+            if (!chapter.content) return;
+
+            const content = chapter.content.toLowerCase();
+            const lines = chapter.content.split('\n');
+            
+            // 查找包含关键词的行
+            lines.forEach((line, lineIndex) => {
+                if (line.toLowerCase().includes(searchQuery)) {
+                    results.push({
+                        chapterIndex,
+                        chapterTitle: chapter.title,
+                        lineIndex,
+                        line: line.trim(),
+                        preview: this.getSearchPreview(line, query)
+                    });
+                }
+            });
+        });
+
+        if (results.length > 0) {
+            this.showSearchResults(results, query, isAISearch);
+        } else {
+            this.showSearchMessage(`未找到包含"${query}"的内容`);
+        }
+    }
+
+    // 获取搜索预览
+    getSearchPreview(line, query) {
+        const maxLength = 100;
+        const queryIndex = line.toLowerCase().indexOf(query.toLowerCase());
+        
+        if (queryIndex === -1) return line.substring(0, maxLength);
+        
+        const start = Math.max(0, queryIndex - 30);
+        const end = Math.min(line.length, queryIndex + query.length + 30);
+        
+        let preview = line.substring(start, end);
+        if (start > 0) preview = '...' + preview;
+        if (end < line.length) preview = preview + '...';
+        
+        return preview;
+    }
+
+    // 显示搜索结果
+    showSearchResults(results, query, isAISearch = false) {
+        const searchType = isAISearch ? 'AI搜索' : '搜索';
+        console.log(`${searchType}完成，找到 ${results.length} 个结果`);
+        
+        // 暂时在控制台显示结果，后续可以添加搜索结果面板
+        console.log('搜索结果:', results);
+        
+        // 跳转到第一个搜索结果
+        if (results.length > 0) {
+            const firstResult = results[0];
+            this.loadChapter(firstResult.chapterIndex);
+            
+            // 延迟高亮显示搜索关键词
+            setTimeout(() => {
+                this.highlightSearchTerm(query);
+            }, 500);
+        }
+        
+        this.showSearchMessage(`找到 ${results.length} 个结果，已跳转到第一个`);
+    }
+
+    // 高亮搜索关键词
+    highlightSearchTerm(query) {
+        const chapterText = document.getElementById('chapterText');
+        if (!chapterText) return;
+
+        // 移除之前的高亮
+        this.removeSearchHighlight();
+
+        const content = chapterText.innerHTML;
+        const regex = new RegExp(`(${this.escapeRegex(query)})`, 'gi');
+        const highlightedContent = content.replace(regex, '<mark class="search-highlight">$1</mark>');
+        
+        chapterText.innerHTML = highlightedContent;
+
+        // 滚动到第一个高亮位置
+        const firstHighlight = chapterText.querySelector('.search-highlight');
+        if (firstHighlight) {
+            firstHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    // 移除搜索高亮
+    removeSearchHighlight() {
+        const highlights = document.querySelectorAll('.search-highlight');
+        highlights.forEach(highlight => {
+            const parent = highlight.parentNode;
+            parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+            parent.normalize();
+        });
+    }
+
+    // 转义正则表达式特殊字符
+    escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // 处理搜索输入
+    handleSearchInput(e) {
+        // 可以在这里添加实时搜索建议等功能
+        const query = e.target.value.trim();
+        if (query.length === 0) {
+            this.removeSearchHighlight();
+        }
+    }
+
+    // 显示搜索消息
+    showSearchMessage(message) {
+        // 简单的消息显示，可以后续优化为更好的UI
+        console.log('搜索消息:', message);
+        
+        // 暂时使用alert，后续可以改为更优雅的提示
+        if (message.includes('未找到') || message.includes('请')) {
+            alert(message);
+        }
     }
 
 

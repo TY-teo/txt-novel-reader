@@ -77,6 +77,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
+    position: relative; /* 为搜索框绝对定位提供参考 */
 }
 
 .logo {
@@ -84,6 +85,132 @@ body {
     font-weight: 600;
     color: var(--accent-color);
     margin: 0;
+}
+
+/* 搜索框样式 - 完全复制CSDN设计 */
+.search-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px; /* 搜索框和按钮之间的间距 */
+}
+
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    background-color: #f5f6f7;
+    border-radius: 16px;
+    border: 1px solid #e8e8ed;
+    height: 40px;
+    min-width: 400px; /* 增大搜索框宽度 */
+    position: relative;
+}
+
+[data-theme="dark"] .search-wrapper {
+    background-color: #2d2d2d;
+    border-color: #404040;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    color: #999;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+[data-theme="dark"] .search-icon {
+    color: #b3b3b3;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 0 16px 0 32px; /* 去掉右边距，因为按钮在外面 */
+    height: 100%;
+    font-size: 14px;
+    font-family: "PingFang SC", "SF Pro Display", "Microsoft YaHei", Roboto, Noto, Arial, sans-serif;
+    color: #2c2c2c;
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: #999;
+}
+
+[data-theme="dark"] .search-input {
+    color: #e1e1e1;
+}
+
+[data-theme="dark"] .search-input::placeholder {
+    color: #b3b3b3;
+}
+
+.search-btn {
+    background-color: #ff6900;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.search-btn:hover {
+    background-color: #e55a00;
+}
+
+.ai-search-btn {
+    background-color: #8a2be2;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.ai-search-btn:hover {
+    background-color: #7a25cc;
+}
+
+.search-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* 两个按钮之间的间距 */
+}
+
+/* 搜索高亮样式 */
+.search-highlight {
+    background-color: #ffeb3b;
+    color: #000;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+[data-theme="dark"] .search-highlight {
+    background-color: #ffc107;
+    color: #000;
 }
 
 .controls {
@@ -1670,6 +1797,90 @@ html, body {
         left: 0 !important;
         height: 100vh !important;
         z-index: 200 !important;
+    }
+    
+    /* 搜索框响应式 - 平板尺寸调整 */
+    .search-container {
+        gap: 6px; /* 减小间距 */
+    }
+    
+    .search-wrapper {
+        min-width: 300px; /* 平板尺寸下保持合适宽度 */
+    }
+    
+    .search-buttons {
+        gap: 4px; /* 减小按钮间距 */
+    }
+    
+    .search-btn, .ai-search-btn {
+        padding: 6px 12px; /* 稍微减小按钮内边距 */
+        font-size: 13px;
+    }
+}
+
+/* 移动端响应式 - 更小的屏幕 */
+@media (max-width: 640px) {
+    .header {
+        padding: 0.75rem 1rem;
+        flex-direction: column; /* 垂直布局 */
+        align-items: stretch;
+        gap: 8px;
+        position: relative; /* 确保header是相对定位容器 */
+    }
+    
+    .controls {
+        order: 2; /* 控制按钮在第二行 */
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .search-container {
+        position: static !important; /* 使用static定位完全脱离绝对定位 */
+        transform: none !important;
+        flex-direction: column; /* 垂直布局 */
+        gap: 8px;
+        width: 100% !important;
+        order: 3; /* 让搜索框在第三行显示 */
+        margin: 8px 0 !important;
+        display: flex !important; /* 强制显示 */
+        left: auto !important; /* 重置left值 */
+        top: auto !important; /* 重置top值 */
+        right: auto !important; /* 重置right值 */
+        bottom: auto !important; /* 重置bottom值 */
+    }
+    
+    .search-wrapper {
+        min-width: 100%; /* 占满宽度 */
+        width: 100%;
+    }
+    
+    .search-buttons {
+        display: flex;
+        width: 100%;
+        gap: 4px;
+    }
+    
+    .search-btn, .ai-search-btn {
+        flex: 1; /* 按钮平分宽度 */
+        justify-content: center;
+        height: 36px; /* 稍微调小移动端按钮高度 */
+        font-size: 12px;
+    }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 480px) {
+    .header {
+        padding: 0.5rem;
+    }
+    
+    .controls {
+        gap: 0.25rem;
+    }
+    
+    .btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
     }
 }
 
