@@ -41,9 +41,9 @@ git clone https://github.com/your-username/txt-novel-reader.git
 
 # 进入目录
 cd txt-novel-reader
-
-# 安装依赖
 点击 index.html启动即可
+点击“用户登录”以选择txt文件
+然后就可以流畅阅读了！
 ```
 
 
