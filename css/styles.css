@@ -742,16 +742,17 @@ body {
 
 .his-selection-item .title {
     display: block;
-    color: rgb(153, 154, 170);
+    color: rgb(85, 86, 102);
     font-size: 14px;
     line-height: 22px;
     margin: 0 0 2px 0;
     text-decoration: none;
     font-family: inherit;
+    font-weight: 500;
 }
 
 [data-theme="dark"] .his-selection-item .title {
-    color: var(--text-secondary);
+    color: var(--accent-color);
 }
 
 .his-selection-item .title:hover {
