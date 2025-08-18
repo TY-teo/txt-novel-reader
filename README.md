@@ -1,6 +1,6 @@
 # 🚀 伪装成技术博客的小说阅读器 - 程序员专属摸鱼神器
 
-[![GitHub stars](https://img.shields.io/github/stars/your-username/txt-novel-reader?style=social)](https://github.com/your-username/txt-novel-reader)
+[![GitHub stars](https://img.shields.io/github/stars/TY-teo/txt-novel-reader?style=social)](https://github.com/TY-teo/txt-novel-reader)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
@@ -31,13 +31,13 @@
 ### 在线体验
 ```bash
 # 直接访问（部署后的地址）
-https://your-username.github.io/txt-novel-reader
+https://TY-teo.github.io/txt-novel-reader
 ```
 
 ### 本地运行
 ```bash
 # 克隆项目
-git clone https://github.com/your-username/txt-novel-reader.git
+git clone https://github.com/TY-teo/txt-novel-reader.git
 
 # 进入目录
 cd txt-novel-reader
@@ -132,8 +132,8 @@ txt-novel-reader/
 5. 提交Pull Request
 
 ### 🐛 问题反馈
-- [提交Issue](https://github.com/your-username/txt-novel-reader/issues)
-- [功能建议](https://github.com/your-username/txt-novel-reader/discussions)
+- [提交Issue](https://github.com/TY-teo/txt-novel-reader/issues)
+- [功能建议](https://github.com/TY-teo/txt-novel-reader/discussions)
 
 ### 💖 支持项目
 - ⭐ 给项目点Star
@@ -146,10 +146,10 @@ txt-novel-reader/
 
 ## 🔗 相关链接
 
-- **项目主页**: [GitHub](https://github.com/your-username/txt-novel-reader)
-- **在线演示**: [Demo](https://your-username.github.io/txt-novel-reader)
-- **问题反馈**: [Issues](https://github.com/your-username/txt-novel-reader/issues)
-- **开发文档**: [Wiki](https://github.com/your-username/txt-novel-reader/wiki)
+- **项目主页**: [GitHub](https://github.com/TY-teo/txt-novel-reader)
+- **在线演示**: [Demo](https://TY-teo.github.io/txt-novel-reader)
+- **问题反馈**: [Issues](https://github.com/TY-teo/txt-novel-reader/issues)
+- **开发文档**: [Wiki](https://github.com/TY-teo/txt-novel-reader/wiki)
 
 
 
@@ -159,7 +159,7 @@ txt-novel-reader/
 
 ### 🎉 让摸鱼变得更专业！
 
-**[⭐ 立即Star](https://github.com/your-username/txt-novel-reader)** | **[🚀 在线体验](https://your-username.github.io/txt-novel-reader)** | **[📖 查看文档](https://github.com/your-username/txt-novel-reader/wiki)**
+**[⭐ 立即Star](https://github.com/TY-teo/txt-novel-reader)** | **[🚀 在线体验](https://TY-teo.github.io/txt-novel-reader)** | **[📖 查看文档](https://github.com/TY-teo/txt-novel-reader/wiki)**
 
 </div>
 
