@@ -1,4 +1,4 @@
-# 🚀 伪装成技术博客的小说阅读器 - 程序员专属摸鱼神器
+# 🚀 伪装成技术博客的小说阅读器 - 程序员摸鱼神器
 
 [![GitHub stars](https://img.shields.io/github/stars/TY-teo/txt-novel-reader?style=social)](https://github.com/TY-teo/txt-novel-reader)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
