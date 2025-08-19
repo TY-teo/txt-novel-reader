@@ -71,3 +71,13 @@ sidebar-navigation-guide.md
 
 # Large test files
 real-shishangsuzui-test.txt
+
+# 备份文件
+*.css.backup*
+*.js.backup*
+*.html.backup*
+*_before_fix.*
+*.patch
+
+# 缓存和内存文件
+.serena/

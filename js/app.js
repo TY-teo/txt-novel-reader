@@ -94,13 +94,13 @@ class NovelReader {
         // 文件选择按钮事件监听器
         const fileSelectBtn = document.querySelector('.btn-primary');
         if (fileSelectBtn && fileSelectBtn.textContent.trim() === '选择文件') {
-            console.log("发现文件选择按钮，添加事件监听器");
-            fileSelectBtn.addEventListener("click", (e) => {
-                console.log("文件选择按钮被点击");
+            console.log('发现文件选择按钮，添加事件监听器');
+            fileSelectBtn.addEventListener('click', () => {
+                console.log('文件选择按钮被点击');
                 if (this.fileInput) {
                     this.fileInput.click();
                 } else {
-                    console.error("文件输入框不存在");
+                    console.error('文件输入框不存在');
                 }
             });
         }
@@ -133,9 +133,9 @@ class NovelReader {
         this.openSettingsBtn.addEventListener('click', () => this.openSettingsModal());
         this.closeSettingsBtn.addEventListener('click', () => this.closeSettingsModal());
         this.closeSettingsBtnSecondary.addEventListener('click', () => this.closeSettingsModal());
-        this.leftMarginRange.addEventListener('input', (e) => this.updateMargins());
-        this.rightMarginRange.addEventListener('input', (e) => this.updateMargins());
-        this.fontSizeRange.addEventListener('input', (e) => this.updateFontSizeFromRange());
+        this.leftMarginRange.addEventListener('input', () => this.updateMargins());
+        this.rightMarginRange.addEventListener('input', () => this.updateMargins());
+        this.fontSizeRange.addEventListener('input', () => this.updateFontSizeFromRange());
         this.resetSettingsBtn.addEventListener('click', () => this.resetSettings());
         
         // 背景色选择事件
@@ -228,8 +228,8 @@ class NovelReader {
             // 其他常见格式
             /^第[一二三四五六七八九十零〇百千万\d]+[回|篇|节].*$/,
             /^Chapter\s*\d+.*$/i,
-            /^[一二三四五六七八九十零〇百千万\d]+\s*[\.、].*$/,
-            /^\d+[\.\s].*$/,
+            /^[一二三四五六七八九十零〇百千万\d]+\s*[.、].*$/,
+            /^\d+[.\s].*$/,
             // 包含中文字符的章节标题
             /^[\u4e00-\u9fa5]*第\d+章.*$/
         ];
@@ -238,7 +238,7 @@ class NovelReader {
         const skipPatterns = [
             /^-+$/,           // 分隔线
             /^\s*$/,          // 空行
-            /^[　\s]*$/       // 全角空格行
+            /^[\u3000\s]*$/       // 全角空格行
         ];
 
         for (let i = 0; i < lines.length; i++) {
@@ -930,7 +930,6 @@ class NovelReader {
         this.chapters.forEach((chapter, chapterIndex) => {
             if (!chapter.content) return;
 
-            const content = chapter.content.toLowerCase();
             const lines = chapter.content.split('\n');
             
             // 查找包含关键词的行
