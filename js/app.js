@@ -78,6 +78,8 @@ class NovelReader {
         this.rightMarginRange = document.getElementById('rightMargin');
         this.leftMarginValue = document.getElementById('leftMarginValue');
         this.rightMarginValue = document.getElementById('rightMarginValue');
+        this.fontSizeRange = document.getElementById('fontSizeRange');
+        this.fontSizeRangeValue = document.getElementById('fontSizeRangeValue');
         this.resetSettingsBtn = document.getElementById('resetSettings');
         this.colorBtns = document.querySelectorAll('.color-btn');
         this.readerContent = document.querySelector('.reader-content');
@@ -133,6 +135,7 @@ class NovelReader {
         this.closeSettingsBtnSecondary.addEventListener('click', () => this.closeSettingsModal());
         this.leftMarginRange.addEventListener('input', (e) => this.updateMargins());
         this.rightMarginRange.addEventListener('input', (e) => this.updateMargins());
+        this.fontSizeRange.addEventListener('input', (e) => this.updateFontSizeFromRange());
         this.resetSettingsBtn.addEventListener('click', () => this.resetSettings());
         
         // 背景色选择事件
@@ -439,9 +442,9 @@ class NovelReader {
 
     changeFontSize(delta) {
         this.fontSize = Math.max(12, Math.min(24, this.fontSize + delta));
-        this.textContent.style.fontSize = `${this.fontSize}px`;
-        this.fontSizeDisplay.textContent = `${this.fontSize}px`;
-        this.saveSettings();
+        this.applyFontSize();
+        this.syncFontSizeControls();
+        this.saveReadingSettings();
     }
 
     toggleSidebar() {
@@ -583,13 +586,10 @@ class NovelReader {
 
     loadSettings() {
         try {
+            // 加载旧的主题设置
             const settings = localStorage.getItem('readerSettings');
             if (settings) {
                 const data = JSON.parse(settings);
-                
-                this.fontSize = data.fontSize || 16;
-                this.textContent.style.fontSize = `${this.fontSize}px`;
-                this.fontSizeDisplay.textContent = `${this.fontSize}px`;
                 
                 this.isDarkTheme = data.isDarkTheme || false;
                 document.body.setAttribute('data-theme', this.isDarkTheme ? 'dark' : 'light');
@@ -599,7 +599,7 @@ class NovelReader {
             console.error('读取设置失败:', error);
         }
         
-        // 加载阅读设置
+        // 加载阅读设置（包括字体大小）
         this.loadReadingSettings();
     }
 
@@ -635,6 +635,10 @@ class NovelReader {
         this.rightMarginRange.value = settings.rightMargin;
         this.leftMarginValue.textContent = settings.leftMargin + 'px';
         this.rightMarginValue.textContent = settings.rightMargin + 'px';
+        
+        // 更新字体大小滑块
+        this.fontSizeRange.value = settings.fontSize;
+        this.fontSizeRangeValue.textContent = settings.fontSize + 'px';
         
         // 更新背景色选择
         this.colorBtns.forEach(btn => {
@@ -682,6 +686,35 @@ class NovelReader {
         }
     }
 
+    // 字体大小相关方法
+    updateFontSizeFromRange() {
+        this.fontSize = parseInt(this.fontSizeRange.value);
+        this.applyFontSize();
+        this.syncFontSizeControls();
+        this.saveReadingSettings();
+    }
+
+    applyFontSize() {
+        if (this.textContent) {
+            this.textContent.style.fontSize = `${this.fontSize}px`;
+        }
+    }
+
+    syncFontSizeControls() {
+        // 同步底部字体显示
+        if (this.fontSizeDisplay) {
+            this.fontSizeDisplay.textContent = `${this.fontSize}px`;
+        }
+        
+        // 同步设置弹窗中的滑块
+        if (this.fontSizeRange) {
+            this.fontSizeRange.value = this.fontSize;
+        }
+        if (this.fontSizeRangeValue) {
+            this.fontSizeRangeValue.textContent = `${this.fontSize}px`;
+        }
+    }
+
     selectBackgroundColor(color) {
         // 更新选中状态
         this.colorBtns.forEach(btn => {
@@ -707,7 +740,8 @@ class NovelReader {
         const defaultSettings = {
             leftMargin: 32,
             rightMargin: 32,
-            backgroundColor: 'transparent'
+            backgroundColor: 'transparent',
+            fontSize: 16
         };
         
         // 更新UI
@@ -716,8 +750,15 @@ class NovelReader {
         this.leftMarginValue.textContent = defaultSettings.leftMargin + 'px';
         this.rightMarginValue.textContent = defaultSettings.rightMargin + 'px';
         
+        // 更新字体大小UI
+        this.fontSize = defaultSettings.fontSize;
+        this.fontSizeRange.value = defaultSettings.fontSize;
+        this.fontSizeRangeValue.textContent = defaultSettings.fontSize + 'px';
+        
         // 应用设置
         this.applyMargins(defaultSettings.leftMargin, defaultSettings.rightMargin);
+        this.applyFontSize();
+        this.syncFontSizeControls();
         this.selectBackgroundColor(defaultSettings.backgroundColor);
         
         // 保存设置
@@ -728,7 +769,8 @@ class NovelReader {
         const defaultSettings = {
             leftMargin: 32,
             rightMargin: 32,
-            backgroundColor: 'transparent'
+            backgroundColor: 'transparent',
+            fontSize: 16
         };
         
         try {
@@ -744,7 +786,8 @@ class NovelReader {
         const settings = {
             leftMargin: parseInt(this.leftMarginRange.value),
             rightMargin: parseInt(this.rightMarginRange.value),
-            backgroundColor: document.querySelector('.color-btn.active')?.dataset.color || 'transparent'
+            backgroundColor: document.querySelector('.color-btn.active')?.dataset.color || 'transparent',
+            fontSize: this.fontSize
         };
         
         try {
@@ -758,6 +801,9 @@ class NovelReader {
         const settings = this.getReadingSettings();
         this.applyMargins(settings.leftMargin, settings.rightMargin);
         this.applyBackgroundColor(settings.backgroundColor);
+        this.fontSize = settings.fontSize;
+        this.applyFontSize();
+        this.syncFontSizeControls();
     }
 
     // 分类专栏展开/收起功能
