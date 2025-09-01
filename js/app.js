@@ -17,6 +17,7 @@ class NovelReader {
         this.initializeElements();
         this.bindEvents();
         this.loadSettings();
+        this.checkLastReading(); // 检查上次阅读进度
         this.addVisibilityChangeHandler();
     }
     
@@ -124,7 +125,7 @@ class NovelReader {
         this.readingArea = document.querySelector('.reading-area');
         
         // 调试信息
-        console.log(`📊 元素初始化结果:`);
+        console.log('📊 元素初始化结果:');
         console.log(`  侧栏: ${this.sidebar ? '✅' : '❌'}`);
         console.log(`  折叠按钮: ${this.collapseBtn ? '✅' : '❌'}`);
         console.log(`  悬浮按钮: ${this.expandTrigger ? '✅' : '❌'}`);
@@ -148,6 +149,13 @@ class NovelReader {
                 }
             });
         }
+        
+        // 继续阅读按钮事件监听器
+        const continueReadingBtn = document.getElementById('continueReadingBtn');
+        if (continueReadingBtn) {
+            continueReadingBtn.addEventListener('click', () => this.continueReading());
+        }
+        
         if (this.toggleSidebarBtn) this.toggleSidebarBtn.addEventListener('click', () => this.toggleSidebar());
         if (this.closeSidebarBtn) this.closeSidebarBtn.addEventListener('click', () => this.closeSidebar());
         if (this.collapseBtn) {
@@ -298,8 +306,9 @@ class NovelReader {
         
         // 检测乱码特征
         const mojibakePatterns = [
-            /[�﻿]/g,  // Unicode替换字符
+            /[\ufffd\ufeff]/g,  // Unicode替换字符
             /\?{3,}/g,          // 多个问号
+            // eslint-disable-next-line no-control-regex
             /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]/g, // 控制字符
         ];
         
@@ -769,12 +778,8 @@ class NovelReader {
         
         if (this.currentChapterTitle) this.currentChapterTitle.textContent = chapter.title;
         
-        // 只显示章节内容
-        this.textContent.innerHTML = `
-            <div class="chapter-text" id="chapterText">
-                ${chapter.content.replace(/\n/g, '<br>')}
-            </div>
-        `;
+        // 只显示章节内容，去除不必要的空白
+        this.textContent.innerHTML = `<div class="chapter-text" id="chapterText">${chapter.content.replace(/\n/g, '<br>')}</div>`;
         
         if (this.chapterProgress) this.chapterProgress.textContent = `${index + 1} / ${this.chapters.length}`;
         
@@ -788,8 +793,8 @@ class NovelReader {
             item.classList.toggle('active', i === index);
         });
         
-        // 自动滚动目录到当前章节
-        this.scrollSidebarToActiveChapter(index);
+        // 自动滚动目录到当前章节，传递恢复进度状态
+        this.scrollSidebarToActiveChapter(index, isRestoringProgress);
         
         // 只有在不是恢复进度时才保存进度和重置滚动位置
         if (!isRestoringProgress) {
@@ -837,42 +842,102 @@ class NovelReader {
     }
 
     scrollSidebarToActiveChapter(chapterIndex) {
-        // 延迟执行，确保DOM已更新
-        setTimeout(() => {
-            const activeChapterItem = document.querySelector('.chapter-item.active');
-            if (activeChapterItem) {
-                console.log(`目录滚动到第${chapterIndex + 1}章`);
+        // 增加重试机制，确保DOM完全渲染后再滚动
+        const attemptScroll = (attempts = 0) => {
+            const maxAttempts = 10;
+            
+            if (attempts >= maxAttempts) {
+                console.warn('目录滚动定位失败：超过最大重试次数');
+                return;
+            }
+            
+            const chapterItems = document.querySelectorAll('.chapter-item');
+            const sidebarContainer = document.querySelector('#chapterList');
+            
+            // 检查必要元素是否存在
+            if (!sidebarContainer || chapterItems.length === 0) {
+                console.log(`目录滚动重试 ${attempts + 1}/${maxAttempts}: DOM未就绪`);
+                setTimeout(() => attemptScroll(attempts + 1), 50);
+                return;
+            }
+            
+            // 确保章节索引有效
+            if (chapterIndex < 0 || chapterIndex >= chapterItems.length) {
+                console.warn(`章节索引无效: ${chapterIndex}/${chapterItems.length}`);
+                return;
+            }
+            
+            const targetItem = chapterItems[chapterIndex];
+            
+            if (!targetItem) {
+                console.log(`目录滚动重试 ${attempts + 1}/${maxAttempts}: 目标章节项未找到`);
+                setTimeout(() => attemptScroll(attempts + 1), 50);
+                return;
+            }
+            
+            console.log(`目录滚动到第${chapterIndex + 1}章 (尝试 ${attempts + 1})`);
+            
+            // 使用更可靠的滚动方法
+            try {
+                // 计算目标元素相对于容器的位置
+                const containerHeight = sidebarContainer.clientHeight;
+                const targetTop = targetItem.offsetTop;
                 
-                // 使用smooth滚动，并且尽量居中显示
-                activeChapterItem.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center',    // 垂直居中
-                    inline: 'nearest'   // 水平方向就近
+                // 计算滚动位置，让目标章节居中显示
+                const scrollPosition = targetTop - (containerHeight / 2) + (targetItem.offsetHeight / 2);
+                
+                // 执行滚动
+                sidebarContainer.scrollTo({
+                    top: Math.max(0, scrollPosition),
+                    behavior: 'smooth'
                 });
                 
-                // 添加临时高亮效果，让用户更容易注意到当前章节
-                activeChapterItem.style.transition = 'background-color 0.5s ease';
-                const originalBg = activeChapterItem.style.backgroundColor;
+                // 添加临时高亮效果
+                this.highlightCurrentChapter(targetItem);
                 
-                // 短暂闪烁效果
-                setTimeout(() => {
-                    activeChapterItem.style.backgroundColor = 'var(--accent-hover)';
-                    setTimeout(() => {
-                        activeChapterItem.style.backgroundColor = originalBg;
-                    }, 300);
-                }, 100);
-            } else {
-                // 如果找不到激活的章节，尝试通过索引查找
-                const chapterItems = document.querySelectorAll('.chapter-item');
-                if (chapterItems[chapterIndex]) {
-                    console.log(`通过索引滚动到第${chapterIndex + 1}章`);
-                    chapterItems[chapterIndex].scrollIntoView({
+                console.log(`✅ 目录滚动成功定位到第${chapterIndex + 1}章`);
+                
+            } catch (error) {
+                console.error('目录滚动执行失败:', error);
+                // 降级方案：使用scrollIntoView
+                try {
+                    targetItem.scrollIntoView({
                         behavior: 'smooth',
                         block: 'center',
                         inline: 'nearest'
                     });
+                    this.highlightCurrentChapter(targetItem);
+                    console.log('✅ 目录滚动降级方案成功');
+                } catch (fallbackError) {
+                    console.error('目录滚动降级方案也失败:', fallbackError);
                 }
             }
+        };
+        
+        // 根据当前状态决定延迟时间
+        const isRestoring = arguments[1]; // 从调用方传入是否为恢复进度
+        const delay = isRestoring ? 300 : 100; // 恢复进度时给更多时间
+        
+        setTimeout(() => attemptScroll(0), delay);
+    }
+
+    highlightCurrentChapter(targetItem) {
+        if (!targetItem) return;
+        
+        // 添加临时高亮效果，让用户更容易注意到当前章节
+        targetItem.style.transition = 'background-color 0.5s ease';
+        const originalBg = getComputedStyle(targetItem).backgroundColor;
+        
+        // 短暂闪烁效果
+        setTimeout(() => {
+            targetItem.style.backgroundColor = 'var(--accent-hover)';
+            setTimeout(() => {
+                targetItem.style.backgroundColor = originalBg;
+                // 清理内联样式
+                setTimeout(() => {
+                    targetItem.style.backgroundColor = '';
+                }, 500);
+            }, 300);
         }, 100);
     }
 
@@ -958,28 +1023,112 @@ class NovelReader {
     saveCurrentBook() {
         if (this.currentBook) {
             try {
-                // 不保存完整文件内容，只保存元数据
+                // 基础书籍元数据
                 const bookMeta = {
                     title: this.currentBook.title,
-                    // content: this.currentBook.content, // 不保存原始内容
                     totalChapters: this.chapters.length,
                     firstChapterPreview: this.chapters[0] ? this.chapters[0].title : '',
                     fileSize: this.currentBook.content.length,
                     timestamp: Date.now()
                 };
                 
-                localStorage.setItem('currentBook', JSON.stringify(bookMeta));
-                console.log(`书籍元数据已保存: ${bookMeta.title}, 共${bookMeta.totalChapters}章`);
+                // 检查内容大小，决定存储策略
+                const contentSize = this.currentBook.content.length;
+                const maxContentSize = 3 * 1024 * 1024; // 3MB 内容限制，为其他数据留出空间
+                
+                if (contentSize <= maxContentSize) {
+                    // 小文件：保存完整内容
+                    bookMeta.content = this.currentBook.content;
+                    localStorage.setItem('currentBook', JSON.stringify(bookMeta));
+                    console.log(`完整书籍数据已保存: ${bookMeta.title}, 共${bookMeta.totalChapters}章`);
+                } else {
+                    // 大文件：分块存储内容
+                    console.log(`大文件检测(${(contentSize/1024/1024).toFixed(2)}MB)，使用分块存储策略`);
+                    
+                    // 先保存元数据
+                    localStorage.setItem('currentBook', JSON.stringify(bookMeta));
+                    
+                    // 分块保存内容
+                    const chunkSize = 1024 * 1024; // 1MB per chunk
+                    const totalChunks = Math.ceil(contentSize / chunkSize);
+                    
+                    // 清理旧的内容块
+                    this.clearBookContentChunks();
+                    
+                    // 保存内容块
+                    for (let i = 0; i < totalChunks; i++) {
+                        const start = i * chunkSize;
+                        const end = Math.min(start + chunkSize, contentSize);
+                        const chunk = this.currentBook.content.substring(start, end);
+                        
+                        try {
+                            localStorage.setItem(`bookChunk_${i}`, chunk);
+                        } catch (chunkError) {
+                            console.error(`保存内容块 ${i} 失败:`, chunkError);
+                            // 如果保存失败，删除已保存的块并保存不含内容的元数据
+                            this.clearBookContentChunks();
+                            bookMeta.hasContentChunks = false;
+                            bookMeta.contentTooLarge = true;
+                            localStorage.setItem('currentBook', JSON.stringify(bookMeta));
+                            console.log('由于存储空间限制，仅保存书籍元数据');
+                            return;
+                        }
+                    }
+                    
+                    // 更新元数据，标记使用了分块存储
+                    bookMeta.hasContentChunks = true;
+                    bookMeta.totalContentChunks = totalChunks;
+                    localStorage.setItem('currentBook', JSON.stringify(bookMeta));
+                    
+                    console.log(`分块存储完成: ${bookMeta.title}, 共${totalChunks}个内容块`);
+                }
             } catch (error) {
-                console.error('保存书籍元数据失败:', error);
-                // 如果仍然失败，尝试删除旧数据后再试
-                try {
-                    localStorage.removeItem('currentBook');
-                    console.log('已清除旧的书籍数据');
-                } catch (clearError) {
-                    console.error('清除旧数据失败:', clearError);
+                console.error('保存书籍数据失败:', error);
+                // 如果保存失败，可能是因为空间不足，尝试只保存元数据
+                if (error.name === 'QuotaExceededError') {
+                    try {
+                        const minimalMeta = {
+                            title: this.currentBook.title,
+                            totalChapters: this.chapters.length,
+                            firstChapterPreview: this.chapters[0] ? this.chapters[0].title : '',
+                            fileSize: this.currentBook.content.length,
+                            timestamp: Date.now(),
+                            contentTooLarge: true
+                        };
+                        localStorage.setItem('currentBook', JSON.stringify(minimalMeta));
+                        console.log('由于空间限制，已保存简化元数据');
+                    } catch (secondError) {
+                        console.error('保存简化数据也失败:', secondError);
+                    }
                 }
             }
+        }
+    }
+
+    clearBookContentChunks() {
+        // 清理所有可能存在的内容块
+        for (let i = 0; i < 50; i++) { // 最多清理50个块
+            const chunkKey = `bookChunk_${i}`;
+            if (localStorage.getItem(chunkKey)) {
+                localStorage.removeItem(chunkKey);
+            }
+        }
+    }
+
+    showLastBookHint(book) {
+        // 显示上次阅读的书籍信息，提示用户重新选择相同文件
+        const lastBookInfo = document.getElementById('lastBookInfo');
+        if (lastBookInfo) {
+            lastBookInfo.style.display = 'block';
+            lastBookInfo.innerHTML = `
+                <div class="last-book-hint">
+                    <h4>📚 上次阅读记录</h4>
+                    <p><strong>书名:</strong> ${book.title}</p>
+                    <p><strong>章节数:</strong> ${book.totalChapters || '未知'}章</p>
+                    <p><strong>文件大小:</strong> ${book.fileSize ? (book.fileSize / (1024 * 1024)).toFixed(2) + 'MB' : '未知'}</p>
+                    <p class="hint-text">由于文件过大，内容数据未完整保存。请重新选择相同的TXT文件继续阅读。</p>
+                </div>
+            `;
         }
     }
 
@@ -1242,6 +1391,8 @@ class NovelReader {
                 this.collapseBtn.setAttribute('title', '展开目录');
             }
             this.saveSidebarState('fully-collapsed');
+            // 修复折叠状态下的底部空间问题
+            this.fixCollapsedLayoutHeight();
         }
         
         console.log('✅ 侧栏状态切换完成');
@@ -1276,6 +1427,43 @@ class NovelReader {
         console.log('侧栏状态已保存:', state);
     }
 
+    // 修复折叠状态下的底部空间问题
+    fixCollapsedLayoutHeight() {
+        const mainContent = document.querySelector('.main-content');
+        if (!mainContent || !mainContent.classList.contains('sidebar-fully-collapsed')) {
+            return;
+        }
+
+        // 计算正确的高度 (viewport高度 - header高度)
+        const correctHeight = window.innerHeight - 80;
+        
+        // 应用修复到主容器
+        mainContent.style.cssText += `
+            grid-template-rows: ${correctHeight}px !important;
+            height: ${correctHeight}px !important;
+        `;
+        
+        // 应用修复到grid子元素
+        const gridElements = [
+            '.recommendations-panel',
+            '.right-sidebar', 
+            '.welcome-screen'
+        ];
+        
+        gridElements.forEach(selector => {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.style.cssText += `
+                    height: ${correctHeight}px !important;
+                    min-height: ${correctHeight}px !important;
+                    max-height: ${correctHeight}px !important;
+                `;
+            }
+        });
+        
+        console.log(`🔧 折叠布局高度已修复: ${correctHeight}px`);
+    }
+
     // 加载侧栏状态
     loadSidebarState() {
         try {
@@ -1293,6 +1481,8 @@ class NovelReader {
                     mainContent.classList.add('sidebar-fully-collapsed');
                     this.expandTrigger.classList.add('visible');
                     console.log('侧栏状态已恢复: 完全折叠');
+                    // 修复折叠状态下的底部空间问题
+                    this.fixCollapsedLayoutHeight();
                     break;
                 default: // expanded
                     this.collapseBtn.setAttribute('aria-expanded', 'true');
@@ -1303,6 +1493,147 @@ class NovelReader {
             }
         } catch (error) {
             console.error('读取侧栏状态失败:', error);
+        }
+    }
+
+    // 检查上次阅读进度并显示继续阅读按钮
+    checkLastReading() {
+        try {
+            const bookData = localStorage.getItem('currentBook');
+            const progressData = localStorage.getItem('readingProgress');
+            
+            if (bookData && progressData) {
+                const book = JSON.parse(bookData);
+                const progress = JSON.parse(progressData);
+                
+                // 关键修复：检查书籍是否匹配并且有内容数据
+                if (book.title && progress.bookTitle && 
+                    this.isBookMatching(progress.bookTitle, book.title) &&
+                    book.content && book.content.trim().length > 0) {
+                    
+                    console.log('发现上次阅读记录:', book.title);
+                    this.showContinueReadingButton(book, progress);
+                } else {
+                    console.log('书籍数据不完整，不显示继续阅读按钮');
+                    if (!book.content) {
+                        console.log('缺少书籍内容数据');
+                    }
+                }
+            } else {
+                console.log('没有找到完整的阅读记录');
+            }
+        } catch (error) {
+            console.error('检查上次阅读记录失败:', error);
+        }
+    }
+    
+    // 显示继续阅读按钮
+    showContinueReadingButton(bookData, progressData) {
+        const continueSection = document.getElementById('continueReadingSection');
+        const lastReadingInfo = document.getElementById('lastReadingInfo');
+        
+        if (continueSection && lastReadingInfo) {
+            // 更新书籍信息
+            const titleElement = lastReadingInfo.querySelector('.last-book-title');
+            const progressElement = lastReadingInfo.querySelector('.last-reading-progress');
+            
+            if (titleElement) {
+                titleElement.textContent = bookData.title;
+            }
+            
+            if (progressElement) {
+                const chapterInfo = progressData.chapterTitle || `第${progressData.chapterIndex + 1}章`;
+                const progressPercent = progressData.scrollPercentage ? 
+                    ` (${Math.round(progressData.scrollPercentage)}%)` : '';
+                progressElement.textContent = `上次阅读到：${chapterInfo}${progressPercent}`;
+            }
+            
+            // 显示继续阅读部分
+            continueSection.style.display = 'block';
+        }
+    }
+    
+    // 继续阅读功能
+    continueReading() {
+        try {
+            const bookData = localStorage.getItem('currentBook');
+            if (!bookData) {
+                alert('未找到上次阅读的书籍记录');
+                return;
+            }
+            
+            const book = JSON.parse(bookData);
+            let bookContent = null;
+            
+            // 检查内容数据的获取方式
+            if (book.content) {
+                // 直接保存的完整内容
+                bookContent = book.content;
+                console.log('从完整存储中加载内容');
+            } else if (book.hasContentChunks && book.totalContentChunks) {
+                // 从分块存储中重建内容
+                console.log(`从${book.totalContentChunks}个内容块中重建内容`);
+                const contentParts = [];
+                
+                for (let i = 0; i < book.totalContentChunks; i++) {
+                    const chunk = localStorage.getItem(`bookChunk_${i}`);
+                    if (chunk === null) {
+                        throw new Error(`内容块 ${i} 缺失，无法重建完整内容`);
+                    }
+                    contentParts.push(chunk);
+                }
+                
+                bookContent = contentParts.join('');
+                console.log(`内容重建完成，总长度: ${bookContent.length} 字符`);
+            } else if (book.contentTooLarge) {
+                // 文件太大，内容未保存
+                alert('书籍文件过大，内容数据未保存。请重新选择原文件继续阅读。');
+                this.showWelcome();
+                this.showLastBookHint(book);
+                return;
+            } else {
+                // 没有内容数据
+                alert('书籍内容数据缺失，请重新选择文件继续阅读');
+                this.showWelcome();
+                this.showLastBookHint(book);
+                return;
+            }
+            
+            // 重新构建书籍对象
+            this.currentBook = {
+                title: book.title,
+                content: bookContent,
+                size: book.fileSize
+            };
+            
+            // 解析章节
+            this.chapters = this.parseChapters(bookContent);
+            console.log(`章节解析完成，共${this.chapters.length}章`);
+            
+            // 更新章节列表
+            this.updateChapterList();
+            
+            // 尝试恢复阅读进度
+            const hasProgress = this.tryLoadReadingProgress();
+            
+            // 如果没有进度，从第一章开始
+            if (!hasProgress) {
+                this.loadChapter(0);
+                console.log('从第一章开始阅读');
+            }
+            
+            // 显示阅读区域
+            this.showReading();
+            
+            // 隐藏欢迎页面的继续阅读按钮
+            this.hideLastBookInfo();
+            
+            console.log('成功恢复上次阅读:', book.title);
+            
+        } catch (error) {
+            console.error('继续阅读失败:', error);
+            alert(`恢复阅读失败: ${error.message}\n\n请重新选择文件`);
+            this.showWelcome();
         }
     }
 
@@ -1362,7 +1693,7 @@ class NovelReader {
                     ${progressInfo ? `<p class="progress-info">${progressInfo}</p>` : ''}
                 </div>
                 <div class="book-actions">
-                    <button class="btn btn-primary" id="continueLastBook">📂 选择此文件继续阅读</button>
+                    <button class="btn btn-primary" id="continueLastBook">📖 继续阅读</button>
                     <button class="btn btn-secondary" id="clearLastBook">✕ 清除记录</button>
                 </div>
             </div>
@@ -1382,8 +1713,8 @@ class NovelReader {
         
         if (continueBtn) {
             continueBtn.addEventListener('click', () => {
-                // 触发文件选择
-                this.fileInput.click();
+                // 直接继续阅读，不需要重新选择文件
+                this.continueReading();
             });
         }
         

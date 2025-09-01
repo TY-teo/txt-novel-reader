@@ -373,10 +373,20 @@ body {
 }
 
 .main-content.sidebar-fully-collapsed {
-    grid-template-columns: 0px 280px 1fr 280px 0px;
+    grid-template-columns: 1fr 280px var(--reader-width, 800px) 280px 1fr;
     grid-template-areas: "leftspacer recommendations reader rightsidebar rightspacer";
+    grid-template-rows: calc(100vh - 80px);
     justify-content: center;
     gap: 1rem;
+    height: calc(100vh - 80px);
+}
+
+/* 确保折叠状态下所有grid子元素填满高度 */
+.main-content.sidebar-fully-collapsed .recommendations-panel,
+.main-content.sidebar-fully-collapsed .right-sidebar,
+.main-content.sidebar-fully-collapsed .welcome-screen {
+    height: calc(100vh - 80px) !important;
+    min-height: calc(100vh - 80px) !important;
 }
 
 /* 确保左右占位元素样式正确 */
@@ -494,11 +504,65 @@ body {
     font-size: 1rem;
 }
 
+/* 继续阅读部分样式 */
+.continue-reading-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.last-reading-info {
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.last-book-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.last-reading-progress {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.continue-reading-btn {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(45deg, #ff6b35, #f7931e);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+.continue-reading-btn:hover {
+    background: linear-gradient(45deg, #e55a2b, #e8841a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(255, 107, 53, 0.4);
+}
+
+.continue-reading-btn:active {
+    transform: translateY(0);
+}
+
 .reading-area {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 2rem 0;
+    padding: 0 0 2rem 0;
 }
 
 
@@ -599,8 +663,10 @@ body {
     .main-content.sidebar-fully-collapsed {
         grid-template-columns: 1fr 280px 1fr 300px 1fr !important;
         grid-template-areas: "leftspacer recommendations reader rightsidebar rightspacer" !important;
+        grid-template-rows: calc(100vh - 80px) !important;
         justify-content: center !important;
         gap: 1rem !important;
+        height: calc(100vh - 80px) !important;
     }
     
     /* 在非折叠状态下隐藏右侧栏 */
@@ -616,10 +682,12 @@ body {
     }
     
     .main-content.sidebar-fully-collapsed {
-        grid-template-columns: 0px 280px 1fr 280px 0px !important;
+        grid-template-columns: 1fr 280px var(--reader-width, 800px) 280px 1fr !important;
         grid-template-areas: "leftspacer recommendations reader rightsidebar rightspacer" !important;
+        grid-template-rows: calc(100vh - 80px) !important;
         justify-content: center !important;
         gap: 1rem !important;
+        height: calc(100vh - 80px) !important;
     }
     
     /* 在非折叠状态下隐藏推荐面板和右侧栏 */
@@ -1802,12 +1870,23 @@ html, body {
     padding: 0 !important;
 }
 
-/* 大屏幕折叠布局 - 自适应填满屏幕 */
+/* 大屏幕折叠布局 - 支持用户自定义阅读区域宽度 */
 .main-content.sidebar-fully-collapsed {
-    grid-template-columns: 0px 280px 1fr 280px 0px !important;
+    grid-template-columns: 1fr 280px var(--reader-width, 800px) 280px 1fr !important;
     grid-template-areas: "leftspacer recommendations reader rightsidebar rightspacer" !important;
+    grid-template-rows: calc(100vh - 80px) !important;
     justify-content: center !important;
     gap: 1rem !important;
+    height: calc(100vh - 80px) !important;
+}
+
+/* 高优先级规则：确保折叠状态下所有grid子元素填满高度 */
+.main-content.sidebar-fully-collapsed .recommendations-panel,
+.main-content.sidebar-fully-collapsed .right-sidebar,
+.main-content.sidebar-fully-collapsed .welcome-screen {
+    height: calc(100vh - 80px) !important;
+    min-height: calc(100vh - 80px) !important;
+    max-height: calc(100vh - 80px) !important;
 }
 
 /* 4. 右边栏全屏高度设置，禁用滚动 */
@@ -2024,7 +2103,15 @@ html, body {
     white-space: pre-wrap;
     word-wrap: break-word;
     padding-bottom: 2rem;
+    margin: 0;
+    padding-top: 0;
     min-height: 200px; /* 确保有足够空间显示内容 */
+}
+
+/* 确保章节文本内的第一个元素没有上边距 */
+.chapter-text > *:first-child {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }
 
 /* 更新后的text-content样式 - 现在是容器，包含章节文本和导航 */
@@ -2038,7 +2125,7 @@ html, body {
     color: var(--text-primary);
     overflow-y: auto;
     max-height: calc(100vh - 120px);
-    padding: 1rem;
+    padding: 0 1rem 1rem 1rem;
     position: relative;
 }
 
