@@ -262,6 +262,7 @@ body {
     min-height: 0;
     height: calc(100vh - 80px); /* 恢复高度限制，确保左侧sidebar滚动正常 */
     max-height: calc(100vh - 80px);
+    transition: grid-template-columns 0.3s ease;
 }
 
 .sidebar {
@@ -283,6 +284,105 @@ body {
     justify-content: space-between;
     align-items: center;
     background-color: var(--bg-tertiary);
+}
+
+/* 折叠功能样式 */
+.sidebar-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.collapse-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0.25rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    min-width: 24px;
+    min-height: 24px;
+    margin-right: 0.5rem;
+}
+
+.collapse-btn:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+}
+
+.collapse-btn:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+.collapse-icon {
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    font-size: 14px;
+}
+
+/* 完全折叠状态样式 */
+.sidebar.fully-collapsed {
+    width: 0;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.sidebar.fully-collapsed * {
+    display: none;
+}
+
+/* 悬浮展开按钮 */
+.expand-trigger {
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 60px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0 12px 12px 0;
+    cursor: pointer;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+}
+
+.expand-trigger:hover {
+    width: 32px;
+    background: var(--primary-color-hover, #0051a2);
+    box-shadow: 2px 0 12px rgba(0,0,0,0.3);
+}
+
+.expand-trigger.visible {
+    display: flex;
+}
+
+.main-content.sidebar-fully-collapsed {
+    grid-template-columns: 0px 280px 1fr 280px 0px;
+    grid-template-areas: "leftspacer recommendations reader rightsidebar rightspacer";
+    justify-content: center;
+    gap: 1rem;
+}
+
+/* 确保左右占位元素样式正确 */
+.left-spacer, .right-spacer {
+    min-width: 0;
+    width: 100%;
 }
 
 .sidebar-header h3 {
@@ -352,7 +452,6 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    max-width: 800px;
     margin: 0 auto;
     width: 100%;
     padding: 0 2rem;
@@ -492,27 +591,48 @@ body {
 
 /* 响应式设计 */
 @media (max-width: 1399px) {
-    .main-content {
+    .main-content:not(.sidebar-fully-collapsed) {
         grid-template-columns: 280px 280px 1fr !important;
         grid-template-areas: "sidebar recommendations reader" !important;
     }
     
-    .right-sidebar {
+    .main-content.sidebar-fully-collapsed {
+        grid-template-columns: 1fr 280px 1fr 300px 1fr !important;
+        grid-template-areas: "leftspacer recommendations reader rightsidebar rightspacer" !important;
+        justify-content: center !important;
+        gap: 1rem !important;
+    }
+    
+    /* 在非折叠状态下隐藏右侧栏 */
+    .main-content:not(.sidebar-fully-collapsed) .right-sidebar {
         display: none !important;
     }
 }
 
 @media (max-width: 1199px) {
-    .main-content {
+    .main-content:not(.sidebar-fully-collapsed) {
         grid-template-columns: 280px 1fr !important;
         grid-template-areas: "sidebar reader" !important;
     }
     
-    .recommendations-panel {
+    .main-content.sidebar-fully-collapsed {
+        grid-template-columns: 0px 280px 1fr 280px 0px !important;
+        grid-template-areas: "leftspacer recommendations reader rightsidebar rightspacer" !important;
+        justify-content: center !important;
+        gap: 1rem !important;
+    }
+    
+    /* 在非折叠状态下隐藏推荐面板和右侧栏 */
+    .main-content:not(.sidebar-fully-collapsed) .recommendations-panel {
         display: none !important;
     }
     
-    .right-sidebar {
+    .main-content:not(.sidebar-fully-collapsed) .right-sidebar {
+        display: none !important;
+    }
+    
+    /* 在折叠状态下保持推荐面板可见，隐藏右侧栏 */
+    .main-content.sidebar-fully-collapsed .right-sidebar {
         display: none !important;
     }
 }
@@ -581,6 +701,11 @@ body {
     
     .text-content {
         max-height: calc(100vh - 180px); /* 移动端调整高度限制，去掉了导航栏 */
+    }
+    
+    /* 移动端隐藏折叠功能 */
+    .collapse-btn {
+        display: none;
     }
 }
 
@@ -1462,6 +1587,14 @@ body {
     text-align: center;
 }
 
+.setting-hint {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
 .color-options {
     display: flex;
     gap: 0.75rem;
@@ -1606,21 +1739,6 @@ html, body {
     flex-shrink: 0;
 }
 
-    .reading-controls,
-    .modal {
-        display: none;
-    }
-    
-    .text-content {
-        border: none;
-        background: none;
-        padding: 0;
-        font-size: 12pt;
-        line-height: 1.6;
-    }
-}
-
-
 /* 文件选择按钮修复 - 确保可点击性 */
 .header .btn {
     position: relative;
@@ -1682,6 +1800,14 @@ html, body {
     min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
+}
+
+/* 大屏幕折叠布局 - 自适应填满屏幕 */
+.main-content.sidebar-fully-collapsed {
+    grid-template-columns: 0px 280px 1fr 280px 0px !important;
+    grid-template-areas: "leftspacer recommendations reader rightsidebar rightspacer" !important;
+    justify-content: center !important;
+    gap: 1rem !important;
 }
 
 /* 4. 右边栏全屏高度设置，禁用滚动 */

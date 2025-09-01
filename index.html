@@ -38,11 +38,11 @@
             
             <div class="controls">
                 <input type="file" id="fileInput" accept=".txt" style="display: none;">
-                <button class="btn btn-primary">
-                    👤 用户登录
+                <button class="btn btn-primary" id="selectFileBtn">
+                    😈用户登录
                 </button>
                 <button class="btn btn-secondary" id="toggleSidebar">
-                    注册
+                    🐳注册
                 </button>
                 <button class="btn btn-secondary" id="toggleTheme">
                     🌙 夜间
@@ -55,10 +55,23 @@
 
         <!-- 主内容区域 -->
         <div class="main-content">
+            <!-- Left Spacer for balanced expansion -->
+            <div class="left-spacer" style="grid-area: leftspacer;"></div>
+            
+            <!-- 悬浮展开按钮 -->
+            <button class="expand-trigger" id="expandTrigger" title="展开目录栏">
+                ▶
+            </button>
+            
             <!-- 左侧边栏 -->
             <aside class="sidebar" id="sidebar">
                 <div class="sidebar-header">
-                    <h3>章节目录</h3>
+                    <div class="sidebar-title-wrapper">
+                        <button class="collapse-btn" id="collapseBtn" aria-expanded="true" aria-label="折叠章节目录" title="折叠章节目录">
+                            <span class="collapse-icon">◀</span>
+                        </button>
+                        <h3>章节目录</h3>
+                    </div>
                     <button class="close-btn" id="closeSidebar">&times;</button>
                 </div>
                 <div class="chapter-list" id="chapterList">
@@ -352,6 +365,9 @@
                 </div>
 
             </aside>
+            
+            <!-- Right Spacer for balanced expansion -->
+            <div class="right-spacer" style="grid-area: rightspacer;"></div>
         </div>
     </div>
 
@@ -385,6 +401,23 @@
                         <input type="range" id="fontSizeRange" min="12" max="24" value="16" class="range-input">
                         <span id="fontSizeRangeValue">16px</span>
                     </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label>行距：</label>
+                    <div class="range-container">
+                        <input type="range" id="lineHeightRange" min="1.0" max="2.5" step="0.1" value="1.6" class="range-input">
+                        <span id="lineHeightValue">1.6</span>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label>阅读区域宽度：</label>
+                    <div class="range-container">
+                        <input type="range" id="readerWidthRange" min="800" max="1200" step="50" value="800" class="range-input">
+                        <span id="readerWidthValue">800px</span>
+                    </div>
+                    <small class="setting-hint">调整折叠状态下阅读区域的宽度，向两侧平衡扩展</small>
                 </div>
                 
                 <div class="setting-group">

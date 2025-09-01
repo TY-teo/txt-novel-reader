@@ -11,11 +11,41 @@ class NovelReader {
         this.scrollSaveTimer = null;
         this.scrollHandler = null;
         
+        // 清理localStorage中可能存在的大文件数据
+        this.cleanupOldStorage();
         
         this.initializeElements();
         this.bindEvents();
         this.loadSettings();
         this.addVisibilityChangeHandler();
+    }
+    
+    // 清理旧的大文件存储数据
+    cleanupOldStorage() {
+        try {
+            const bookData = localStorage.getItem('currentBook');
+            if (bookData) {
+                const data = JSON.parse(bookData);
+                // 检查是否包含大量内容数据
+                if (data.content && data.content.length > 1024 * 1024) { // 大于1MB
+                    console.log(`检测到旧的大文件数据 (${(data.content.length / 1024 / 1024).toFixed(2)}MB)，正在清理...`);
+                    
+                    // 保留元数据，删除内容
+                    const cleanedData = {
+                        title: data.title,
+                        totalChapters: data.chapters || 0,
+                        timestamp: data.timestamp
+                    };
+                    
+                    localStorage.setItem('currentBook', JSON.stringify(cleanedData));
+                    console.log('大文件数据清理完成');
+                }
+            }
+        } catch (error) {
+            console.error('清理旧数据时发生错误:', error);
+            // 如果数据损坏，直接删除
+            localStorage.removeItem('currentBook');
+        }
     }
 
     addVisibilityChangeHandler() {
@@ -45,6 +75,8 @@ class NovelReader {
     }
 
     initializeElements() {
+        console.log('🔄 正在初始化元素...');
+        
         this.fileInput = document.getElementById('fileInput');
         this.sidebar = document.getElementById('sidebar');
         this.chapterList = document.getElementById('chapterList');
@@ -58,6 +90,8 @@ class NovelReader {
         
         this.toggleSidebarBtn = document.getElementById('toggleSidebar');
         this.closeSidebarBtn = document.getElementById('closeSidebar');
+        this.collapseBtn = document.getElementById('collapseBtn');
+        this.expandTrigger = document.getElementById('expandTrigger');
         this.toggleThemeBtn = document.getElementById('toggleTheme');
         this.prevChapterBtn = document.getElementById('prevChapter');
         this.nextChapterBtn = document.getElementById('nextChapter');
@@ -80,11 +114,21 @@ class NovelReader {
         this.rightMarginValue = document.getElementById('rightMarginValue');
         this.fontSizeRange = document.getElementById('fontSizeRange');
         this.fontSizeRangeValue = document.getElementById('fontSizeRangeValue');
+        this.lineHeightRange = document.getElementById('lineHeightRange');
+        this.lineHeightValue = document.getElementById('lineHeightValue');
+        this.readerWidthRange = document.getElementById('readerWidthRange');
+        this.readerWidthValue = document.getElementById('readerWidthValue');
         this.resetSettingsBtn = document.getElementById('resetSettings');
         this.colorBtns = document.querySelectorAll('.color-btn');
         this.readerContent = document.querySelector('.reader-content');
         this.readingArea = document.querySelector('.reading-area');
         
+        // 调试信息
+        console.log(`📊 元素初始化结果:`);
+        console.log(`  侧栏: ${this.sidebar ? '✅' : '❌'}`);
+        console.log(`  折叠按钮: ${this.collapseBtn ? '✅' : '❌'}`);
+        console.log(`  悬浮按钮: ${this.expandTrigger ? '✅' : '❌'}`);
+        console.log(`  主内容: ${document.querySelector('.main-content') ? '✅' : '❌'}`);
         
     }
 
@@ -92,8 +136,8 @@ class NovelReader {
         this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
         
         // 文件选择按钮事件监听器
-        const fileSelectBtn = document.querySelector('.btn-primary');
-        if (fileSelectBtn && fileSelectBtn.textContent.trim() === '选择文件') {
+        const fileSelectBtn = document.getElementById('selectFileBtn');
+        if (fileSelectBtn) {
             console.log('发现文件选择按钮，添加事件监听器');
             fileSelectBtn.addEventListener('click', () => {
                 console.log('文件选择按钮被点击');
@@ -104,8 +148,26 @@ class NovelReader {
                 }
             });
         }
-        this.toggleSidebarBtn.addEventListener('click', () => this.toggleSidebar());
-        this.closeSidebarBtn.addEventListener('click', () => this.closeSidebar());
+        if (this.toggleSidebarBtn) this.toggleSidebarBtn.addEventListener('click', () => this.toggleSidebar());
+        if (this.closeSidebarBtn) this.closeSidebarBtn.addEventListener('click', () => this.closeSidebar());
+        if (this.collapseBtn) {
+            console.log('✅ 折叠按钮找到，绑定事件');
+            this.collapseBtn.addEventListener('click', () => {
+                console.log('🔄 折叠按钮被点击');
+                this.toggleSidebarCollapse();
+            });
+        } else {
+            console.error('❌ 折叠按钮未找到');
+        }
+        if (this.expandTrigger) {
+            console.log('✅ 悬浮按钮找到，绑定事件');
+            this.expandTrigger.addEventListener('click', () => {
+                console.log('🔄 悬浮按钮被点击');
+                this.expandFromTrigger();
+            });
+        } else {
+            console.error('❌ 悬浮按钮未找到');
+        }
         this.toggleThemeBtn.addEventListener('click', () => this.toggleTheme());
         if (this.prevChapterBtn) this.prevChapterBtn.addEventListener('click', () => this.previousChapter());
         if (this.nextChapterBtn) this.nextChapterBtn.addEventListener('click', () => this.nextChapter());
@@ -136,12 +198,16 @@ class NovelReader {
         this.leftMarginRange.addEventListener('input', () => this.updateMargins());
         this.rightMarginRange.addEventListener('input', () => this.updateMargins());
         this.fontSizeRange.addEventListener('input', () => this.updateFontSizeFromRange());
+        this.lineHeightRange.addEventListener('input', () => this.updateLineHeight());
         this.resetSettingsBtn.addEventListener('click', () => this.resetSettings());
         
         // 背景色选择事件
         this.colorBtns.forEach(btn => {
             btn.addEventListener('click', () => this.selectBackgroundColor(btn.dataset.color));
         });
+        
+        // 阅读区域宽度事件
+        this.readerWidthRange.addEventListener('input', () => this.updateReaderWidth());
         
         // 点击模态框背景关闭
         this.settingsModal.addEventListener('click', (e) => {
@@ -169,11 +235,29 @@ class NovelReader {
             return;
         }
         
+        // 检查文件大小并显示处理进度
+        const fileSizeMB = file.size / (1024 * 1024);
+        console.log(`文件大小: ${fileSizeMB.toFixed(2)}MB`);
+        
+        if (fileSizeMB > 5) {
+            this.showProcessingProgress('正在读取大文件，请稍候...');
+        }
+        
         try {
             const content = await this.readFile(file);
-            this.processBook(content, file.name);
+            
+            if (fileSizeMB > 5) {
+                this.updateProcessingProgress('文件读取完成，正在解析章节...');
+                // 使用 setTimeout 让 UI 有时间更新
+                setTimeout(() => {
+                    this.processBook(content, file.name);
+                }, 100);
+            } else {
+                this.processBook(content, file.name);
+            }
         } catch (error) {
             console.error('文件读取失败:', error);
+            this.hideProcessingProgress();
             alert('文件读取失败，请检查文件格式');
         }
     }
@@ -181,10 +265,107 @@ class NovelReader {
     readFile(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
+            reader.onload = (e) => {
+                let content = e.target.result;
+                
+                // 检测是否为乱码（含有大量非正常字符）
+                const isMojibake = this.detectMojibake(content);
+                
+                if (isMojibake) {
+                    console.log('检测到UTF-8解码异常，尝试GBK编码...');
+                    // 重新以GBK编码读取
+                    this.readFileWithEncoding(file, 'GBK').then(resolve).catch(() => {
+                        // GBK失败，尝试GB2312
+                        console.log('GBK失败，尝试GB2312...');
+                        this.readFileWithEncoding(file, 'GB2312').then(resolve).catch(() => {
+                            console.log('所有编码都失败，使用原始内容');
+                            resolve(content); // 使用原始内容
+                        });
+                    });
+                } else {
+                    console.log('文件编码正常，UTF-8解码成功');
+                    resolve(content);
+                }
+            };
             reader.onerror = (e) => reject(e);
-            reader.readAsText(file, 'UTF-8');
+            reader.readAsText(file, 'UTF-8'); // 先尝试UTF-8
         });
+    }
+    
+    // 检测乱码
+    detectMojibake(text) {
+        if (!text || text.length === 0) return false;
+        
+        // 检测乱码特征
+        const mojibakePatterns = [
+            /[�﻿]/g,  // Unicode替换字符
+            /\?{3,}/g,          // 多个问号
+            /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]/g, // 控制字符
+        ];
+        
+        let mojibakeCount = 0;
+        mojibakePatterns.forEach(pattern => {
+            const matches = text.match(pattern);
+            if (matches) mojibakeCount += matches.length;
+        });
+        
+        // 如果乱码字符超过文本长度的1%，认为是乱码
+        const mojibakeRatio = mojibakeCount / text.length;
+        
+        // 另外检查中文字符的存在，如果几乎没有中文字符但有很多奇怪符号，也认为是乱码
+        const chineseChars = text.match(/[\u4e00-\u9fa5]/g);
+        const chineseRatio = chineseChars ? chineseChars.length / text.length : 0;
+        
+        console.log(`乱码检测: 乱码率=${mojibakeRatio.toFixed(4)}, 中文率=${chineseRatio.toFixed(4)}`);
+        
+        return mojibakeRatio > 0.01 || (chineseRatio < 0.1 && mojibakeCount > 10);
+    }
+    
+    // 使用指定编码读取文件
+    readFileWithEncoding(file, encoding) {
+        return new Promise((resolve, reject) => {
+            try {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const decoder = new TextDecoder(encoding);
+                        const content = decoder.decode(arrayBuffer);
+                        
+                        // 验证解码结果
+                        if (this.validateDecodedContent(content)) {
+                            console.log(`${encoding}编码解码成功`);
+                            resolve(content);
+                        } else {
+                            console.log(`${encoding}编码解码失败`);
+                            reject(new Error(`${encoding} encoding failed`));
+                        }
+                    } catch (error) {
+                        console.error(`${encoding}解码错误:`, error);
+                        reject(error);
+                    }
+                };
+                reader.onerror = (e) => reject(e);
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+    
+    // 验证解码内容的有效性
+    validateDecodedContent(content) {
+        if (!content || content.length === 0) return false;
+        
+        // 检查是否包含正常的中文字符
+        const chineseChars = content.match(/[\u4e00-\u9fa5]/g);
+        const chineseRatio = chineseChars ? chineseChars.length / content.length : 0;
+        
+        // 检查是否包含常见的章节关键词
+        const hasChapterKeywords = /第[\u4e00-\u4e5d\d]+章|第\d+回/.test(content);
+        
+        // 中文字符占比合理且包含章节关键词
+        return chineseRatio > 0.1 && hasChapterKeywords;
     }
 
     processBook(content, filename) {
@@ -193,23 +374,280 @@ class NovelReader {
             content: content
         };
         
-        this.chapters = this.parseChapters(content);
+        console.log(`开始处理文件: ${filename}`);
+        console.log(`文件内容长度: ${content.length} 字符`);
+        console.log(`文件内容预览 (前200字符): ${content.substring(0, 200)}`);
+        
+        // 检查文件内容是否有效
+        if (!content || content.trim().length === 0) {
+            this.hideProcessingProgress();
+            alert('文件内容为空，请检查文件是否正确');
+            return;
+        }
+        
+        // 对于大文件，使用异步解析
+        const fileSizeMB = content.length / (1024 * 1024);
+        if (fileSizeMB > 5) {
+            console.log(`大文件检测: ${fileSizeMB.toFixed(2)}MB，使用异步解析`);
+            this.updateProcessingProgress('正在解析章节结构...');
+            setTimeout(() => {
+                this.parseChaptersAsync(content).then(chapters => {
+                    console.log(`异步解析完成，共找到 ${chapters.length} 个章节`);
+                    this.chapters = chapters;
+                    this.finishBookProcessing();
+                }).catch(error => {
+                    console.error('章节解析失败:', error);
+                    this.hideProcessingProgress();
+                    // 提供更详细的错误信息
+                    const errorMsg = `章节解析失败：${error.message || '未知错误'}\n\n可能原因：\n1. 文件编码问题\n2. 文件格式不支持\n3. 文件内容异常\n\n请检查文件是否为正常的TXT小说文件。`;
+                    alert(errorMsg);
+                });
+            }, 50);
+        } else {
+            console.log(`小文件检测: ${fileSizeMB.toFixed(2)}MB，使用同步解析`);
+            try {
+                this.chapters = this.parseChapters(content);
+                console.log(`同步解析完成，共找到 ${this.chapters.length} 个章节`);
+                this.finishBookProcessing();
+            } catch (error) {
+                console.error('同步章节解析失败:', error);
+                this.hideProcessingProgress();
+                alert(`章节解析失败：${error.message || '未知错误'}，请检查文件格式`);
+            }
+        }
+    }
+    
+    finishBookProcessing() {
         this.updateChapterList();
         this.showReading();
         
-        // 检查是否有保存的阅读进度
+        // 检查是否有保存的阅读进度，并检查书籍是否匹配
         const hasProgress = this.tryLoadReadingProgress();
         
         // 如果没有进度或加载失败，从第一章开始
         if (!hasProgress) {
             this.loadChapter(0);
+            console.log('从第一章开始阅读');
         } else {
             console.log('✅ 阅读进度恢复成功！');
         }
         
+        // 保存当前书籍信息
         this.saveCurrentBook();
+        this.hideProcessingProgress();
+        
+        // 隐藏欢迎页面的上次阅读信息
+        this.hideLastBookInfo();
+        
+        // 显示章节数量信息
+        console.log(`解析完成！共找到 ${this.chapters.length} 个章节`);
+    }
+    
+    // 隐藏欢迎页面的上次阅读信息
+    hideLastBookInfo() {
+        const lastBookInfo = document.querySelector('.last-book-info');
+        if (lastBookInfo) {
+            lastBookInfo.style.display = 'none';
+        }
     }
 
+    // 显示处理进度
+    showProcessingProgress(message) {
+        // 创建进度蒙版
+        if (!this.processingOverlay) {
+            this.processingOverlay = document.createElement('div');
+            this.processingOverlay.className = 'processing-overlay';
+            this.processingOverlay.innerHTML = `
+                <div class="processing-content">
+                    <div class="processing-spinner"></div>
+                    <div class="processing-message">正在处理文件...</div>
+                </div>
+            `;
+            
+            // 添加样式
+            const style = document.createElement('style');
+            style.textContent = `
+                .processing-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 9999;
+                    backdrop-filter: blur(2px);
+                }
+                .processing-content {
+                    background: white;
+                    padding: 2rem;
+                    border-radius: 8px;
+                    text-align: center;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                }
+                .processing-spinner {
+                    width: 40px;
+                    height: 40px;
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #3498db;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 1rem;
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                .processing-message {
+                    color: #333;
+                    font-size: 1rem;
+                    margin-bottom: 0.5rem;
+                }
+                [data-theme="dark"] .processing-content {
+                    background: #2c3e50;
+                    color: white;
+                }
+            `;
+            document.head.appendChild(style);
+            document.body.appendChild(this.processingOverlay);
+        }
+        
+        this.updateProcessingProgress(message);
+    }
+    
+    // 更新进度消息
+    updateProcessingProgress(message) {
+        if (this.processingOverlay) {
+            const messageEl = this.processingOverlay.querySelector('.processing-message');
+            if (messageEl) {
+                messageEl.textContent = message;
+            }
+        }
+    }
+    
+    // 隐藏进度显示
+    hideProcessingProgress() {
+        if (this.processingOverlay) {
+            document.body.removeChild(this.processingOverlay);
+            this.processingOverlay = null;
+        }
+    }
+
+    // 异步章节解析（大文件优化）
+    async parseChaptersAsync(content) {
+        return new Promise((resolve) => {
+            const lines = content.split('\n');
+            const chapters = [];
+            let currentChapter = null;
+            let chapterContent = [];
+            let processedLines = 0;
+            const totalLines = lines.length;
+
+            // 增强的章节识别模式，专门优化网络小说格式
+            const chapterPatterns = [
+                // "第一卷 第1章" 格式 - 针对史上最强师父
+                /^第[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u96f6\u3007\u767e\u5343\u4e07\d]+卷\s+第\d+章.*$/,
+                // "第X卷 第Y章" 变体
+                /^第[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u96f6\u3007\u767e\u5343\u4e07\d]+卷.*第\d+章.*$/,
+                // 传统章节格式
+                /^第[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u96f6\u3007\u767e\u5343\u4e07\d]+章.*$/,
+                /^第\d+章.*$/,
+                // 其他常见格式
+                /^第[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u96f6\u3007\u767e\u5343\u4e07\d]+[回|篇|节].*$/,
+                /^Chapter\s*\d+.*$/i,
+                /^[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u96f6\u3007\u767e\u5343\u4e07\d]+\s*[.、].*$/,
+                /^\d+[.\s].*$/,
+                // 包含中文字符的章节标题
+                /^[\u4e00-\u9fa5]*第\d+章.*$/
+            ];
+
+            // 预处理：过滤掉明显的非章节行
+            const skipPatterns = [
+                /^-+$/,           // 分隔线
+                /^\s*$/,          // 空行
+                /^[\u3000\s]*$/       // 全角空格行
+            ];
+
+            const processNextBatch = () => {
+                const batchSize = 1000; // 每次处理1000行
+                const endIndex = Math.min(processedLines + batchSize, lines.length);
+                
+                for (let i = processedLines; i < endIndex; i++) {
+                    const line = lines[i].trim();
+                    
+                    // 跳过空行和分隔线
+                    if (skipPatterns.some(pattern => pattern.test(line))) {
+                        if (chapterContent.length > 0 && currentChapter) {
+                            chapterContent.push('');
+                        }
+                        continue;
+                    }
+
+                    const isChapterTitle = chapterPatterns.some(pattern => pattern.test(line));
+                    
+                    if (isChapterTitle) {
+                        if (currentChapter && chapterContent.length > 0) {
+                            currentChapter.content = chapterContent.join('\n').trim();
+                            chapters.push(currentChapter);
+                        }
+                        
+                        currentChapter = {
+                            title: line,
+                            content: '',
+                            startIndex: i
+                        };
+                        chapterContent = [];
+                    } else if (currentChapter) {
+                        chapterContent.push(line);
+                    } else {
+                        if (chapters.length === 0) {
+                            if (!currentChapter) {
+                                currentChapter = {
+                                    title: this.currentBook ? this.currentBook.title : '第一章',
+                                    content: '',
+                                    startIndex: 0
+                                };
+                                chapterContent = [];
+                            }
+                            chapterContent.push(line);
+                        }
+                    }
+                }
+                
+                processedLines = endIndex;
+                
+                // 更新进度
+                const progress = Math.round((processedLines / totalLines) * 100);
+                this.updateProcessingProgress(`正在解析章节... ${progress}%`);
+                
+                if (processedLines < lines.length) {
+                    // 继续处理下一批
+                    setTimeout(processNextBatch, 10);
+                } else {
+                    // 处理最后一章
+                    if (currentChapter && chapterContent.length > 0) {
+                        currentChapter.content = chapterContent.join('\n').trim();
+                        chapters.push(currentChapter);
+                    }
+
+                    // 如果没有识别到章节，将整个内容作为一章
+                    if (chapters.length === 0) {
+                        chapters.push({
+                            title: this.currentBook ? this.currentBook.title : '全文',
+                            content: content,
+                            startIndex: 0
+                        });
+                    }
+                    
+                    resolve(chapters);
+                }
+            };
+            
+            processNextBatch();
+        });
+    }
     parseChapters(content) {
         const lines = content.split('\n');
         const chapters = [];
@@ -219,16 +657,16 @@ class NovelReader {
         // 增强的章节识别模式，专门优化网络小说格式
         const chapterPatterns = [
             // "第一卷 第1章" 格式 - 针对史上最强师父
-            /^第[一二三四五六七八九十零〇百千万\d]+卷\s+第\d+章.*$/,
+            /^第[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u96f6\u3007\u767e\u5343\u4e07\d]+卷\s+第\d+章.*$/,
             // "第X卷 第Y章" 变体
-            /^第[一二三四五六七八九十零〇百千万\d]+卷.*第\d+章.*$/,
+            /^第[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u96f6\u3007\u767e\u5343\u4e07\d]+卷.*第\d+章.*$/,
             // 传统章节格式
-            /^第[一二三四五六七八九十零〇百千万\d]+章.*$/,
+            /^第[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u96f6\u3007\u767e\u5343\u4e07\d]+章.*$/,
             /^第\d+章.*$/,
             // 其他常见格式
-            /^第[一二三四五六七八九十零〇百千万\d]+[回|篇|节].*$/,
+            /^第[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u96f6\u3007\u767e\u5343\u4e07\d]+[回|篇|节].*$/,
             /^Chapter\s*\d+.*$/i,
-            /^[一二三四五六七八九十零〇百千万\d]+\s*[.、].*$/,
+            /^[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\u96f6\u3007\u767e\u5343\u4e07\d]+\s*[.、].*$/,
             /^\d+[.\s].*$/,
             // 包含中文字符的章节标题
             /^[\u4e00-\u9fa5]*第\d+章.*$/
@@ -323,7 +761,7 @@ class NovelReader {
         this.readingArea.style.display = 'block';
     }
 
-    loadChapter(index) {
+    loadChapter(index, isRestoringProgress = false) {
         if (index < 0 || index >= this.chapters.length) return;
         
         this.currentChapterIndex = index;
@@ -353,11 +791,21 @@ class NovelReader {
         // 自动滚动目录到当前章节
         this.scrollSidebarToActiveChapter(index);
         
-        this.saveReadingProgress();
-        this.textContent.scrollTop = 0;
+        // 只有在不是恢复进度时才保存进度和重置滚动位置
+        if (!isRestoringProgress) {
+            this.saveReadingProgress();
+            this.textContent.scrollTop = 0;
+        }
         
         // 添加滚动事件监听，保存滚动位置
         this.addScrollProgressSaver();
+        
+        // 应用当前的字体和行距设置到新加载的章节
+        setTimeout(() => {
+            this.applyFontSize();
+            const settings = this.getReadingSettings();
+            this.applyLineHeight(settings.lineHeight);
+        }, 100);
         
     }
 
@@ -509,29 +957,56 @@ class NovelReader {
 
     saveCurrentBook() {
         if (this.currentBook) {
-            localStorage.setItem('currentBook', JSON.stringify({
-                title: this.currentBook.title,
-                content: this.currentBook.content,
-                chapters: this.chapters.length,
-                timestamp: Date.now()
-            }));
+            try {
+                // 不保存完整文件内容，只保存元数据
+                const bookMeta = {
+                    title: this.currentBook.title,
+                    // content: this.currentBook.content, // 不保存原始内容
+                    totalChapters: this.chapters.length,
+                    firstChapterPreview: this.chapters[0] ? this.chapters[0].title : '',
+                    fileSize: this.currentBook.content.length,
+                    timestamp: Date.now()
+                };
+                
+                localStorage.setItem('currentBook', JSON.stringify(bookMeta));
+                console.log(`书籍元数据已保存: ${bookMeta.title}, 共${bookMeta.totalChapters}章`);
+            } catch (error) {
+                console.error('保存书籍元数据失败:', error);
+                // 如果仍然失败，尝试删除旧数据后再试
+                try {
+                    localStorage.removeItem('currentBook');
+                    console.log('已清除旧的书籍数据');
+                } catch (clearError) {
+                    console.error('清除旧数据失败:', clearError);
+                }
+            }
         }
     }
 
     saveReadingProgress() {
         if (this.currentBook && this.textContent) {
             try {
+                // 获取更详细的进度信息
+                const scrollTop = this.textContent.scrollTop;
+                const scrollHeight = this.textContent.scrollHeight;
+                const clientHeight = this.textContent.clientHeight;
+                const scrollPercentage = scrollHeight > clientHeight ? (scrollTop / (scrollHeight - clientHeight)) * 100 : 0;
+                
                 const progressData = {
                     bookTitle: this.currentBook.title,
                     chapterIndex: this.currentChapterIndex,
-                    scrollPosition: this.textContent.scrollTop,
+                    scrollPosition: scrollTop,
+                    scrollPercentage: scrollPercentage,
                     chapterTitle: this.chapters[this.currentChapterIndex]?.title || '',
                     totalChapters: this.chapters.length,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    // 添加更多上下文信息
+                    fileSize: this.currentBook.content?.length || 0,
+                    currentChapterLength: this.chapters[this.currentChapterIndex]?.content?.length || 0
                 };
                 
                 localStorage.setItem('readingProgress', JSON.stringify(progressData));
-                console.log(`阅读进度已保存: 第${this.currentChapterIndex + 1}章, 滚动位置: ${progressData.scrollPosition}`);
+                console.log(`阅读进度已保存: 第${this.currentChapterIndex + 1}章 (滚动: ${scrollTop}px, ${scrollPercentage.toFixed(1)}%)`);
             } catch (error) {
                 console.error('保存阅读进度失败:', error);
             }
@@ -545,22 +1020,40 @@ class NovelReader {
                 const data = JSON.parse(progress);
                 console.log('尝试加载阅读进度:', data);
                 
-                if (data.bookTitle === this.currentBook.title && 
+                // 检查书籍是否匹配（支持多种匹配方式）
+                const isBookMatch = this.isBookMatching(data.bookTitle, this.currentBook.title);
+                
+                if (isBookMatch && 
                     data.chapterIndex !== undefined && 
+                    data.chapterIndex >= 0 &&
                     data.chapterIndex < this.chapters.length) {
                     
-                    console.log(`恢复阅读进度: 第${data.chapterIndex + 1}章, 滚动位置: ${data.scrollPosition}`);
-                    this.loadChapter(data.chapterIndex);
+                    console.log(`✅ 书籍匹配成功，恢复阅读进度: 第${data.chapterIndex + 1}章, 滚动位置: ${data.scrollPosition}`);
+                    
+                    // 加载指定章节（标记为恢复进度，避免重置滚动位置）
+                    this.loadChapter(data.chapterIndex, true);
                     
                     // 恢复滚动位置
                     setTimeout(() => {
-                        if (this.textContent && data.scrollPosition !== undefined) {
+                        if (this.textContent && data.scrollPosition !== undefined && data.scrollPosition > 0) {
                             this.textContent.scrollTop = data.scrollPosition;
                             console.log('滚动位置已恢复:', data.scrollPosition);
                         }
-                    }, 200);
+                    }, 300); // 增加延迟确保 DOM 渲染完成
+                    
+                    // 显示恢复成功的提示
+                    setTimeout(() => {
+                        this.showProgressRestoredMessage(data);
+                    }, 500);
                     
                     return true; // 成功加载进度
+                } else {
+                    if (!isBookMatch) {
+                        console.log(`书籍不匹配: 存储的="${data.bookTitle}", 当前="${this.currentBook.title}"`);
+                    }
+                    if (data.chapterIndex >= this.chapters.length) {
+                        console.log(`章节索引超出范围: ${data.chapterIndex} >= ${this.chapters.length}`);
+                    }
                 }
             }
         } catch (error) {
@@ -569,6 +1062,107 @@ class NovelReader {
         
         console.log('没有可用的阅读进度，从第一章开始');
         return false; // 没有进度或加载失败
+    }
+    
+    // 检查书籍是否匹配（支持多种匹配方式）
+    isBookMatching(savedTitle, currentTitle) {
+        if (!savedTitle || !currentTitle) return false;
+        
+        // 完全匹配
+        if (savedTitle === currentTitle) return true;
+        
+        // 去除扩展名后匹配
+        const cleanSaved = savedTitle.replace(/\.(txt|TXT)$/i, '');
+        const cleanCurrent = currentTitle.replace(/\.(txt|TXT)$/i, '');
+        if (cleanSaved === cleanCurrent) return true;
+        
+        // 去除空格和特殊字符后匹配
+        const normalizeSaved = cleanSaved.replace(/[\s\-_\u3000]/g, '').toLowerCase();
+        const normalizeCurrent = cleanCurrent.replace(/[\s\-_\u3000]/g, '').toLowerCase();
+        if (normalizeSaved === normalizeCurrent) return true;
+        
+        return false;
+    }
+    
+    // 显示进度恢复成功的提示
+    showProgressRestoredMessage(progressData) {
+        // 创建提示消息
+        const message = document.createElement('div');
+        message.className = 'progress-restored-message';
+        message.innerHTML = `
+            <div class="message-content">
+                <span class="message-icon">✅</span>
+                <span class="message-text">阅读进度已恢复！继续阅读 ${progressData.chapterTitle || `第${progressData.chapterIndex + 1}章`}</span>
+            </div>
+        `;
+        
+        // 添加样式
+        const style = document.createElement('style');
+        style.textContent = `
+            .progress-restored-message {
+                position: fixed;
+                top: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--success-color, #10b981);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: var(--border-radius);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                animation: slideInDown 0.3s ease-out forwards, slideOutUp 0.3s ease-in 3s forwards;
+                font-size: 0.9rem;
+                font-weight: 500;
+                max-width: 400px;
+                text-align: center;
+            }
+            
+            .message-content {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                justify-content: center;
+            }
+            
+            .message-icon {
+                font-size: 1.2rem;
+            }
+            
+            @keyframes slideInDown {
+                from {
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(0);
+                }
+            }
+            
+            @keyframes slideOutUp {
+                from {
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(-20px);
+                }
+            }
+        `;
+        
+        document.head.appendChild(style);
+        document.body.appendChild(message);
+        
+        // 3.5秒后自动移除
+        setTimeout(() => {
+            if (message.parentNode) {
+                message.parentNode.removeChild(message);
+            }
+            if (style.parentNode) {
+                style.parentNode.removeChild(style);
+            }
+        }, 3500);
     }
 
     loadReadingProgress() {
@@ -601,6 +1195,115 @@ class NovelReader {
         
         // 加载阅读设置（包括字体大小）
         this.loadReadingSettings();
+        
+        // 加载侧栏折叠状态
+        this.loadSidebarState();
+    }
+
+    // 折叠/展开侧栏切换 - 支持两种状态：展开、完全折叠
+    toggleSidebarCollapse() {
+        console.log('🔄 toggleSidebarCollapse 方法被调用');
+        
+        if (!this.sidebar) {
+            console.error('❌ 侧栏元素不存在');
+            return;
+        }
+        
+        const mainContent = document.querySelector('.main-content');
+        if (!mainContent) {
+            console.error('❌ 主内容元素不存在');
+            return;
+        }
+        
+        const isFullyCollapsed = this.sidebar.classList.contains('fully-collapsed');
+        console.log(`📊 当前状态: ${isFullyCollapsed ? '完全折叠' : '展开'}`);
+        
+        if (isFullyCollapsed) {
+            // 从完全折叠到展开状态
+            console.log('⬅️ 展开侧栏');
+            this.sidebar.classList.remove('fully-collapsed');
+            mainContent.classList.remove('sidebar-fully-collapsed');
+            if (this.expandTrigger) this.expandTrigger.classList.remove('visible');
+            if (this.collapseBtn) {
+                this.collapseBtn.setAttribute('aria-expanded', 'true');
+                this.collapseBtn.setAttribute('aria-label', '折叠目录');
+                this.collapseBtn.setAttribute('title', '折叠目录');
+            }
+            this.saveSidebarState('expanded');
+        } else {
+            // 从展开到完全折叠状态
+            console.log('➡️ 折叠侧栏');
+            this.sidebar.classList.add('fully-collapsed');
+            mainContent.classList.add('sidebar-fully-collapsed');
+            if (this.expandTrigger) this.expandTrigger.classList.add('visible');
+            if (this.collapseBtn) {
+                this.collapseBtn.setAttribute('aria-expanded', 'false');
+                this.collapseBtn.setAttribute('aria-label', '展开目录');
+                this.collapseBtn.setAttribute('title', '展开目录');
+            }
+            this.saveSidebarState('fully-collapsed');
+        }
+        
+        console.log('✅ 侧栏状态切换完成');
+        
+        // 验证结果
+        setTimeout(() => {
+            const newState = this.sidebar.classList.contains('fully-collapsed');
+            console.log(`🔍 状态验证: ${newState ? '完全折叠' : '展开'}`);
+            console.log(`🔍 主内容类: ${mainContent.className}`);
+        }, 100);
+    }
+
+    // 从悬浮按钮展开侧栏
+    expandFromTrigger() {
+        const mainContent = document.querySelector('.main-content');
+        
+        this.sidebar.classList.remove('fully-collapsed');
+        mainContent.classList.remove('sidebar-fully-collapsed');
+        this.expandTrigger.classList.remove('visible');
+        
+        this.collapseBtn.setAttribute('aria-expanded', 'true');
+        this.collapseBtn.setAttribute('aria-label', '折叠目录');
+        this.collapseBtn.setAttribute('title', '折叠目录');
+        
+        this.saveSidebarState('expanded');
+        console.log('从悬浮按钮展开侧栏');
+    }
+
+    // 保存侧栏状态
+    saveSidebarState(state) {
+        localStorage.setItem('sidebarState', state);
+        console.log('侧栏状态已保存:', state);
+    }
+
+    // 加载侧栏状态
+    loadSidebarState() {
+        try {
+            const sidebarState = localStorage.getItem('sidebarState') || 'expanded';
+            const mainContent = document.querySelector('.main-content');
+            
+            // 清除所有状态
+            this.sidebar.classList.remove('fully-collapsed');
+            mainContent.classList.remove('sidebar-fully-collapsed');
+            this.expandTrigger.classList.remove('visible');
+            
+            switch (sidebarState) {
+                case 'fully-collapsed':
+                    this.sidebar.classList.add('fully-collapsed');
+                    mainContent.classList.add('sidebar-fully-collapsed');
+                    this.expandTrigger.classList.add('visible');
+                    console.log('侧栏状态已恢复: 完全折叠');
+                    break;
+                default: // expanded
+                    this.collapseBtn.setAttribute('aria-expanded', 'true');
+                    this.collapseBtn.setAttribute('aria-label', '折叠目录');
+                    this.collapseBtn.setAttribute('title', '折叠目录');
+                    console.log('侧栏状态已恢复: 展开');
+                    break;
+            }
+        } catch (error) {
+            console.error('读取侧栏状态失败:', error);
+        }
     }
 
     loadLastBook() {
@@ -608,12 +1311,176 @@ class NovelReader {
             const bookData = localStorage.getItem('currentBook');
             if (bookData) {
                 const data = JSON.parse(bookData);
-                this.processBook(data.content, data.title + '.txt');
-                this.loadReadingProgress();
+                console.log(`上次阅读: ${data.title}, ${data.totalChapters}章节, 文件大小: ${(data.fileSize / 1024 / 1024).toFixed(2)}MB`);
+                
+                // 在欢迎页面显示上次阅读信息
+                if (data.title && data.totalChapters > 0) {
+                    this.showLastBookInfo(data);
+                }
             }
         } catch (error) {
             console.error('读取上次打开的书籍失败:', error);
+            // 清除损坏的数据
+            localStorage.removeItem('currentBook');
         }
+    }
+    
+    // 在欢迎页面显示上次阅读的书籍信息
+    showLastBookInfo(bookData) {
+        const welcomeScreen = document.querySelector('.welcome-screen');
+        if (!welcomeScreen) return;
+        
+        // 检查是否已经添加了上次阅读信息
+        const existingInfo = welcomeScreen.querySelector('.last-book-info');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
+        
+        // 获取阅读进度信息
+        let progressInfo = '';
+        try {
+            const progress = localStorage.getItem('readingProgress');
+            if (progress) {
+                const progressData = JSON.parse(progress);
+                if (progressData.bookTitle === bookData.title) {
+                    progressInfo = `上次阅读到：${progressData.chapterTitle || `第${progressData.chapterIndex + 1}章`}`;
+                }
+            }
+        } catch (error) {
+            console.error('读取进度信息失败:', error);
+        }
+        
+        // 创建上次阅读信息面板
+        const lastBookInfo = document.createElement('div');
+        lastBookInfo.className = 'last-book-info';
+        lastBookInfo.innerHTML = `
+            <div class="last-book-card">
+                <h3>📖 继续上次阅读</h3>
+                <div class="book-details">
+                    <p class="book-title">${bookData.title}</p>
+                    <p class="book-stats">共 ${bookData.totalChapters} 章节 • ${(bookData.fileSize / 1024 / 1024).toFixed(2)}MB</p>
+                    ${progressInfo ? `<p class="progress-info">${progressInfo}</p>` : ''}
+                </div>
+                <div class="book-actions">
+                    <button class="btn btn-primary" id="continueLastBook">📂 选择此文件继续阅读</button>
+                    <button class="btn btn-secondary" id="clearLastBook">✕ 清除记录</button>
+                </div>
+            </div>
+        `;
+        
+        // 在feature-list之前插入
+        const featureList = welcomeScreen.querySelector('.feature-list');
+        if (featureList) {
+            welcomeScreen.insertBefore(lastBookInfo, featureList);
+        } else {
+            welcomeScreen.appendChild(lastBookInfo);
+        }
+        
+        // 绑定事件
+        const continueBtn = lastBookInfo.querySelector('#continueLastBook');
+        const clearBtn = lastBookInfo.querySelector('#clearLastBook');
+        
+        if (continueBtn) {
+            continueBtn.addEventListener('click', () => {
+                // 触发文件选择
+                this.fileInput.click();
+            });
+        }
+        
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                // 清除上次阅读记录
+                localStorage.removeItem('currentBook');
+                localStorage.removeItem('readingProgress');
+                lastBookInfo.remove();
+                console.log('已清除上次阅读记录');
+            });
+        }
+        
+        // 添加样式
+        this.addLastBookInfoStyles();
+    }
+    
+    // 添加上次阅读信息的样式
+    addLastBookInfoStyles() {
+        // 检查是否已经添加了样式
+        if (document.querySelector('#lastBookInfoStyles')) return;
+        
+        const style = document.createElement('style');
+        style.id = 'lastBookInfoStyles';
+        style.textContent = `
+            .last-book-info {
+                margin: 2rem 0;
+                padding: 0;
+            }
+            
+            .last-book-card {
+                background: var(--bg-secondary);
+                border: 1px solid var(--border-color);
+                border-radius: var(--border-radius);
+                padding: 1.5rem;
+                text-align: left;
+            }
+            
+            .last-book-card h3 {
+                margin: 0 0 1rem 0;
+                color: var(--accent-color);
+                font-size: 1.2rem;
+                text-align: center;
+            }
+            
+            .book-details {
+                margin-bottom: 1.5rem;
+            }
+            
+            .book-title {
+                font-weight: bold;
+                font-size: 1.1rem;
+                color: var(--text-primary);
+                margin: 0 0 0.5rem 0;
+                word-break: break-word;
+            }
+            
+            .book-stats {
+                color: var(--text-muted);
+                font-size: 0.9rem;
+                margin: 0 0 0.5rem 0;
+            }
+            
+            .progress-info {
+                color: var(--accent-color);
+                font-size: 0.9rem;
+                margin: 0;
+                font-style: italic;
+            }
+            
+            .book-actions {
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .book-actions .btn {
+                flex: 1;
+                min-width: 150px;
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            @media (max-width: 480px) {
+                .book-actions {
+                    flex-direction: column;
+                }
+                
+                .book-actions .btn {
+                    flex: none;
+                    width: 100%;
+                }
+            }
+        `;
+        
+        document.head.appendChild(style);
     }
 
     // 设置功能方法
@@ -639,6 +1506,14 @@ class NovelReader {
         // 更新字体大小滑块
         this.fontSizeRange.value = settings.fontSize;
         this.fontSizeRangeValue.textContent = settings.fontSize + 'px';
+        
+        // 更新行距滑块
+        this.lineHeightRange.value = settings.lineHeight;
+        this.lineHeightValue.textContent = settings.lineHeight.toFixed(1);
+        
+        // 更新阅读区域宽度滑块
+        this.readerWidthRange.value = settings.readerWidth;
+        this.readerWidthValue.textContent = settings.readerWidth + 'px';
         
         // 更新背景色选择
         this.colorBtns.forEach(btn => {
@@ -686,6 +1561,53 @@ class NovelReader {
         }
     }
 
+    // 阅读区域宽度相关方法
+    updateReaderWidth() {
+        const readerWidth = parseInt(this.readerWidthRange.value);
+        
+        // 更新显示值
+        this.readerWidthValue.textContent = readerWidth + 'px';
+        
+        // 应用阅读区域宽度
+        this.applyReaderWidth(readerWidth);
+        
+        // 保存设置
+        this.saveReadingSettings();
+    }
+    
+    applyReaderWidth(readerWidth) {
+        // 使用CSS自定义属性来动态调整折叠状态下的阅读区域宽度
+        document.documentElement.style.setProperty('--reader-width', `${readerWidth}px`);
+        document.documentElement.style.setProperty('--reader-width-value', `${readerWidth}px`);
+    }
+
+    // 行距相关方法
+    updateLineHeight() {
+        const lineHeight = parseFloat(this.lineHeightRange.value);
+        
+        // 更新显示值
+        this.lineHeightValue.textContent = lineHeight.toFixed(1);
+        
+        // 应用行距
+        this.applyLineHeight(lineHeight);
+        
+        // 保存设置
+        this.saveReadingSettings();
+    }
+    
+    applyLineHeight(lineHeight) {
+        // 应用行距到章节文本元素
+        const chapterText = document.getElementById('chapterText');
+        if (chapterText) {
+            chapterText.style.lineHeight = lineHeight;
+        }
+        
+        // 也应用到textContent容器作为后备
+        if (this.textContent) {
+            this.textContent.style.lineHeight = lineHeight;
+        }
+    }
+    
     // 字体大小相关方法
     updateFontSizeFromRange() {
         this.fontSize = parseInt(this.fontSizeRange.value);
@@ -695,6 +1617,13 @@ class NovelReader {
     }
 
     applyFontSize() {
+        // 应用字体大小到章节文本元素
+        const chapterText = document.getElementById('chapterText');
+        if (chapterText) {
+            chapterText.style.fontSize = `${this.fontSize}px`;
+        }
+        
+        // 也应用到textContent容器作为后备
         if (this.textContent) {
             this.textContent.style.fontSize = `${this.fontSize}px`;
         }
@@ -741,7 +1670,9 @@ class NovelReader {
             leftMargin: 32,
             rightMargin: 32,
             backgroundColor: 'transparent',
-            fontSize: 16
+            fontSize: 16,
+            lineHeight: 1.6,
+            readerWidth: 800
         };
         
         // 更新UI
@@ -755,9 +1686,19 @@ class NovelReader {
         this.fontSizeRange.value = defaultSettings.fontSize;
         this.fontSizeRangeValue.textContent = defaultSettings.fontSize + 'px';
         
+        // 更新行距UI
+        this.lineHeightRange.value = defaultSettings.lineHeight;
+        this.lineHeightValue.textContent = defaultSettings.lineHeight.toFixed(1);
+        
+        // 更新阅读区域宽度UI
+        this.readerWidthRange.value = defaultSettings.readerWidth;
+        this.readerWidthValue.textContent = defaultSettings.readerWidth + 'px';
+        
         // 应用设置
         this.applyMargins(defaultSettings.leftMargin, defaultSettings.rightMargin);
         this.applyFontSize();
+        this.applyLineHeight(defaultSettings.lineHeight);
+        this.applyReaderWidth(defaultSettings.readerWidth);
         this.syncFontSizeControls();
         this.selectBackgroundColor(defaultSettings.backgroundColor);
         
@@ -770,7 +1711,9 @@ class NovelReader {
             leftMargin: 32,
             rightMargin: 32,
             backgroundColor: 'transparent',
-            fontSize: 16
+            fontSize: 16,
+            lineHeight: 1.6,
+            readerWidth: 800
         };
         
         try {
@@ -787,7 +1730,9 @@ class NovelReader {
             leftMargin: parseInt(this.leftMarginRange.value),
             rightMargin: parseInt(this.rightMarginRange.value),
             backgroundColor: document.querySelector('.color-btn.active')?.dataset.color || 'transparent',
-            fontSize: this.fontSize
+            fontSize: this.fontSize,
+            lineHeight: parseFloat(this.lineHeightRange.value),
+            readerWidth: parseInt(this.readerWidthRange.value)
         };
         
         try {
@@ -803,6 +1748,8 @@ class NovelReader {
         this.applyBackgroundColor(settings.backgroundColor);
         this.fontSize = settings.fontSize;
         this.applyFontSize();
+        this.applyLineHeight(settings.lineHeight);
+        this.applyReaderWidth(settings.readerWidth);
         this.syncFontSizeControls();
     }
 
@@ -1054,6 +2001,8 @@ class NovelReader {
 document.addEventListener('DOMContentLoaded', () => {
     const reader = new NovelReader();
     
+    // 将reader实例暴露给全局变量，供测试页面使用
+    window.reader = reader;
     
     window.addEventListener('beforeunload', () => {
         if (reader.currentBook) {
